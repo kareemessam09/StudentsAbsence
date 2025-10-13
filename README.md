@@ -5,9 +5,10 @@ A modern Flutter application for managing school attendance with elegant Materia
 ## ✨ Features
 
 ### 🏫 Core Functionality
-- **Role-Based Access**: Separate interfaces for Receptionists and Teachers
+- **Role-Based Access**: Separate interfaces for Receptionists, Teachers, and Dean
 - **Attendance Management**: Send and track attendance requests
 - **Real-time Status Updates**: Track request status (Pending, Accepted, Not Found)
+- **Dean Dashboard**: Comprehensive statistics and analytics across all classes
 - **Mock Data**: Pre-populated sample data for testing
 
 ### 🎨 Design & UX
@@ -66,7 +67,7 @@ A modern Flutter application for managing school attendance with elegant Materia
 
 ### Login Screen (`/login`)
 - Animated entrance with logo
-- Two role selection buttons
+- Role selection with demo accounts
 - Smooth transitions to role-specific screens
 
 ### Receptionist Home Screen (`/receptionist`)
@@ -80,6 +81,13 @@ A modern Flutter application for managing school attendance with elegant Materia
 - Accept or mark students as "Not Found"
 - Animated status updates
 - Pending count badge in AppBar
+
+### Dean Dashboard (`/dean`)
+- **NEW!** Comprehensive statistics dashboard
+- Overall attendance metrics (Total, Pending, Accepted, Not Found)
+- Class-wise breakdown with attendance rates
+- Real-time data visualization
+- Pull-to-refresh functionality
 
 ## 🏗️ Project Structure
 

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../cubits/user_cubit.dart';
 import '../cubits/user_state.dart';
 import '../models/user_model.dart';
+import '../utils/responsive.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -114,270 +116,305 @@ class _ProfileScreenState extends State<ProfileScreen> {
               return const Center(child: Text('Please log in to view profile'));
             }
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Profile Avatar
-                    FadeInDown(
-                      duration: const Duration(milliseconds: 600),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primaryContainer,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                currentUser.isReceptionist
-                                    ? Icons.person
-                                    : Icons.school,
-                                size: 50,
-                                color: theme.colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Chip(
-                              label: Text(
-                                currentUser.isReceptionist
-                                    ? 'Receptionist'
-                                    : 'Teacher',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+            return Responsive.centerContent(
+              context: context,
+              child: SingleChildScrollView(
+                padding: Responsive.padding(horizontal: 24, vertical: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Profile Avatar
+                      FadeInDown(
+                        duration: const Duration(milliseconds: 600),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 100.r,
+                                height: 100.r,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  currentUser.isReceptionist
+                                      ? Icons.person
+                                      : Icons.school,
+                                  size: 50.r,
+                                  color: theme.colorScheme.onPrimaryContainer,
                                 ),
                               ),
-                              backgroundColor:
-                                  theme.colorScheme.secondaryContainer,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Name Field
-                    FadeInLeft(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 100),
-                      child: TextFormField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          labelText: 'Name',
-                          prefixIcon: const Icon(Icons.person_outline),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                              Responsive.verticalSpace(16),
+                              Chip(
+                                label: Text(
+                                  currentUser.isReceptionist
+                                      ? 'Receptionist'
+                                      : currentUser.isTeacher
+                                      ? 'Teacher'
+                                      : 'Dean',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.sp,
+                                  ),
+                                ),
+                                backgroundColor:
+                                    theme.colorScheme.secondaryContainer,
+                              ),
+                            ],
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your name';
-                          }
-                          return null;
-                        },
-                        enabled: !isLoading,
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      Responsive.verticalSpace(32),
 
-                    // Email Field
-                    FadeInRight(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 200),
-                      child: TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!value.contains('@')) {
-                            return 'Please enter a valid email';
-                          }
-                          return null;
-                        },
-                        enabled: !isLoading,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Class Selection (for Teachers only)
-                    if (currentUser.isTeacher)
+                      // Name Field
                       FadeInLeft(
                         duration: const Duration(milliseconds: 600),
-                        delay: const Duration(milliseconds: 300),
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedClass,
+                        delay: const Duration(milliseconds: 100),
+                        child: TextFormField(
+                          controller: _nameController,
+                          style: TextStyle(fontSize: 14.sp),
                           decoration: InputDecoration(
-                            labelText: 'Managed Class',
-                            prefixIcon: const Icon(Icons.class_outlined),
+                            labelText: 'Name',
+                            labelStyle: TextStyle(fontSize: 14.sp),
+                            prefixIcon: Icon(Icons.person_outline, size: 20.r),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: Responsive.borderRadius(12),
                             ),
                           ),
-                          items: _availableClasses.map((className) {
-                            return DropdownMenuItem(
-                              value: className,
-                              child: Text(className),
-                            );
-                          }).toList(),
-                          onChanged: isLoading
-                              ? null
-                              : (value) {
-                                  setState(() {
-                                    _selectedClass = value;
-                                  });
-                                },
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please select a class';
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your name';
                             }
                             return null;
                           },
+                          enabled: !isLoading,
                         ),
                       ),
+                      Responsive.verticalSpace(16),
 
-                    if (currentUser.isTeacher) const SizedBox(height: 16),
-
-                    // Info Card for Teachers
-                    if (currentUser.isTeacher)
-                      FadeIn(
+                      // Email Field
+                      FadeInRight(
                         duration: const Duration(milliseconds: 600),
-                        delay: const Duration(milliseconds: 400),
-                        child: Card(
-                          elevation: 0,
-                          color: theme.colorScheme.surfaceContainerHighest
-                              .withOpacity(0.3),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'You can change the class you manage. This will update which attendance requests you see.',
-                                    style: theme.textTheme.bodySmall,
-                                  ),
-                                ),
-                              ],
+                        delay: const Duration(milliseconds: 200),
+                        child: TextFormField(
+                          controller: _emailController,
+                          style: TextStyle(fontSize: 14.sp),
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            labelStyle: TextStyle(fontSize: 14.sp),
+                            prefixIcon: Icon(Icons.email_outlined, size: 20.r),
+                            border: OutlineInputBorder(
+                              borderRadius: Responsive.borderRadius(12),
                             ),
                           ),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            if (!value.contains('@')) {
+                              return 'Please enter a valid email';
+                            }
+                            return null;
+                          },
+                          enabled: !isLoading,
                         ),
                       ),
+                      Responsive.verticalSpace(16),
 
-                    const SizedBox(height: 32),
-
-                    // Save Button
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 500),
-                      child: SizedBox(
-                        height: 56,
-                        child: ElevatedButton.icon(
-                          onPressed: isLoading
-                              ? null
-                              : () => _saveProfile(currentUser),
-                          icon: isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.save),
-                          label: Text(
-                            isLoading ? 'Saving...' : 'Save Changes',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Logout Button
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 600),
-                      child: SizedBox(
-                        height: 56,
-                        child: OutlinedButton.icon(
-                          onPressed: isLoading
-                              ? null
-                              : () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Logout'),
-                                      content: const Text(
-                                        'Are you sure you want to logout?',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: const Text('Cancel'),
-                                        ),
-                                        FilledButton(
-                                          onPressed: () {
-                                            context.read<UserCubit>().logout();
-                                            Navigator.pushNamedAndRemoveUntil(
-                                              context,
-                                              '/login',
-                                              (route) => false,
-                                            );
-                                          },
-                                          child: const Text('Logout'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                          icon: const Icon(Icons.logout),
-                          label: const Text(
-                            'Logout',
+                      // Class Selection (for Teachers only)
+                      if (currentUser.isTeacher)
+                        FadeInLeft(
+                          duration: const Duration(milliseconds: 600),
+                          delay: const Duration(milliseconds: 300),
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedClass,
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 14.sp,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Managed Class',
+                              labelStyle: TextStyle(fontSize: 14.sp),
+                              prefixIcon: Icon(
+                                Icons.class_outlined,
+                                size: 20.r,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: Responsive.borderRadius(12),
+                              ),
+                            ),
+                            items: _availableClasses.map((className) {
+                              return DropdownMenuItem(
+                                value: className,
+                                child: Text(
+                                  className,
+                                  style: TextStyle(fontSize: 14.sp),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: isLoading
+                                ? null
+                                : (value) {
+                                    setState(() {
+                                      _selectedClass = value;
+                                    });
+                                  },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select a class';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+
+                      if (currentUser.isTeacher) Responsive.verticalSpace(16),
+
+                      // Info Card for Teachers
+                      if (currentUser.isTeacher)
+                        FadeIn(
+                          duration: const Duration(milliseconds: 600),
+                          delay: const Duration(milliseconds: 400),
+                          child: Card(
+                            elevation: Responsive.cardElevation(context),
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withOpacity(0.3),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: Responsive.borderRadius(12),
+                            ),
+                            child: Padding(
+                              padding: Responsive.padding(all: 16),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    size: 20.r,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  Responsive.horizontalSpace(12),
+                                  Expanded(
+                                    child: Text(
+                                      'You can change the class you manage. This will update which attendance requests you see.',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(fontSize: 12.sp),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          style: OutlinedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        ),
+
+                      Responsive.verticalSpace(32),
+
+                      // Save Button
+                      FadeInUp(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 500),
+                        child: SizedBox(
+                          height: Responsive.buttonHeight(context),
+                          child: ElevatedButton.icon(
+                            onPressed: isLoading
+                                ? null
+                                : () => _saveProfile(currentUser),
+                            icon: isLoading
+                                ? SizedBox(
+                                    width: 20.r,
+                                    height: 20.r,
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Icon(Icons.save, size: 20.r),
+                            label: Text(
+                              isLoading ? 'Saving...' : 'Save Changes',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: Responsive.borderRadius(12),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      Responsive.verticalSpace(16),
+
+                      // Logout Button
+                      FadeInUp(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 600),
+                        child: SizedBox(
+                          height: Responsive.buttonHeight(context),
+                          child: OutlinedButton.icon(
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text(
+                                          'Logout',
+                                          style: TextStyle(fontSize: 18.sp),
+                                        ),
+                                        content: Text(
+                                          'Are you sure you want to logout?',
+                                          style: TextStyle(fontSize: 14.sp),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            child: Text(
+                                              'Cancel',
+                                              style: TextStyle(fontSize: 14.sp),
+                                            ),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () {
+                                              context
+                                                  .read<UserCubit>()
+                                                  .logout();
+                                              Navigator.pushNamedAndRemoveUntil(
+                                                context,
+                                                '/login',
+                                                (route) => false,
+                                              );
+                                            },
+                                            child: Text(
+                                              'Logout',
+                                              style: TextStyle(fontSize: 14.sp),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                            icon: Icon(Icons.logout, size: 20.r),
+                            label: Text(
+                              'Logout',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: Responsive.borderRadius(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

@@ -4,7 +4,7 @@ class UserModel extends Equatable {
   final String id;
   final String name;
   final String email;
-  final String role; // "receptionist" or "teacher"
+  final String role; // "receptionist", "teacher", or "dean"
   final String? className; // only for teachers
 
   const UserModel({
@@ -56,6 +56,7 @@ class UserModel extends Equatable {
 
   bool get isReceptionist => role == 'receptionist';
   bool get isTeacher => role == 'teacher';
+  bool get isDean => role == 'dean';
 
   @override
   List<Object?> get props => [id, name, email, role, className];
@@ -100,6 +101,12 @@ class UserModel extends Equatable {
         email: 'lisa.teacher@school.com',
         role: 'teacher',
         className: 'Class C',
+      ),
+      const UserModel(
+        id: '6',
+        name: 'Dr. Robert Dean',
+        email: 'robert.dean@school.com',
+        role: 'dean',
       ),
     ];
   }

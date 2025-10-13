@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../cubits/user_cubit.dart';
 import '../cubits/user_state.dart';
+import '../utils/responsive.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -60,6 +62,8 @@ class _SignupScreenState extends State<SignupScreen> {
             Navigator.pushReplacementNamed(context, '/receptionist');
           } else if (state.user.isTeacher) {
             Navigator.pushReplacementNamed(context, '/teacher');
+          } else if (state.user.isDean) {
+            Navigator.pushReplacementNamed(context, '/dean');
           }
         } else if (state is UserError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -77,296 +81,343 @@ class _SignupScreenState extends State<SignupScreen> {
           builder: (context, state) {
             final isLoading = state is UserLoading;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header
-                    FadeInDown(
-                      duration: const Duration(milliseconds: 600),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.person_add,
-                            size: 80,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Join StudentNotifier',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Create your account to get started',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.6,
+            return Responsive.centerContent(
+              context: context,
+              child: SingleChildScrollView(
+                padding: Responsive.padding(horizontal: 24, vertical: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      FadeInDown(
+                        duration: const Duration(milliseconds: 600),
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: Responsive.borderRadius(16),
+                              child: Image.asset(
+                                'logo.png',
+                                width: 120.r,
+                                height: 120.r,
+                                fit: BoxFit.contain,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 32),
-                        ],
-                      ),
-                    ),
-
-                    // Name Field
-                    FadeInLeft(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 100),
-                      child: TextFormField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          labelText: 'Full Name',
-                          prefixIcon: const Icon(Icons.person_outline),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your name';
-                          }
-                          return null;
-                        },
-                        enabled: !isLoading,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Email Field
-                    FadeInRight(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 200),
-                      child: TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!value.contains('@')) {
-                            return 'Please enter a valid email';
-                          }
-                          return null;
-                        },
-                        enabled: !isLoading,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Role Selection
-                    FadeInLeft(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 300),
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedRole,
-                        decoration: InputDecoration(
-                          labelText: 'Role',
-                          prefixIcon: const Icon(Icons.work_outline),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'receptionist',
-                            child: Text('Receptionist'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'teacher',
-                            child: Text('Teacher'),
-                          ),
-                        ],
-                        onChanged: isLoading
-                            ? null
-                            : (value) {
-                                setState(() {
-                                  _selectedRole = value!;
-                                });
-                              },
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Class Name (for teachers only)
-                    if (_selectedRole == 'teacher')
-                      FadeIn(
-                        duration: const Duration(milliseconds: 400),
-                        child: TextFormField(
-                          controller: _classNameController,
-                          decoration: InputDecoration(
-                            labelText: 'Class Name',
-                            prefixIcon: const Icon(Icons.class_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            Responsive.verticalSpace(16),
+                            Text(
+                              'Join StudentNotifier',
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 28.sp,
+                              ),
                             ),
-                            hintText: 'e.g., Class A',
+                            Responsive.verticalSpace(8),
+                            Text(
+                              'Create your account to get started',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.6,
+                                ),
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                            Responsive.verticalSpace(32),
+                          ],
+                        ),
+                      ),
+
+                      // Name Field
+                      FadeInLeft(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 100),
+                        child: TextFormField(
+                          controller: _nameController,
+                          style: TextStyle(fontSize: 14.sp),
+                          decoration: InputDecoration(
+                            labelText: 'Full Name',
+                            labelStyle: TextStyle(fontSize: 14.sp),
+                            prefixIcon: Icon(Icons.person_outline, size: 20.r),
+                            border: OutlineInputBorder(
+                              borderRadius: Responsive.borderRadius(12),
+                            ),
                           ),
                           validator: (value) {
-                            if (_selectedRole == 'teacher' &&
-                                (value == null || value.trim().isEmpty)) {
-                              return 'Please enter your class name';
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your name';
                             }
                             return null;
                           },
                           enabled: !isLoading,
                         ),
                       ),
-                    if (_selectedRole == 'teacher') const SizedBox(height: 16),
+                      Responsive.verticalSpace(16),
 
-                    // Password Field
-                    FadeInRight(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 400),
-                      child: TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a password';
-                          }
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
-                          return null;
-                        },
-                        enabled: !isLoading,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Confirm Password Field
-                    FadeInLeft(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 500),
-                      child: TextFormField(
-                        controller: _confirmPasswordController,
-                        obscureText: _obscureConfirmPassword,
-                        decoration: InputDecoration(
-                          labelText: 'Confirm Password',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureConfirmPassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscureConfirmPassword =
-                                    !_obscureConfirmPassword;
-                              });
-                            },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value != _passwordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
-                        enabled: !isLoading,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Signup Button
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 600),
-                      child: SizedBox(
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: isLoading ? null : _handleSignup,
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      // Email Field
+                      FadeInRight(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 200),
+                        child: TextFormField(
+                          controller: _emailController,
+                          style: TextStyle(fontSize: 14.sp),
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            labelStyle: TextStyle(fontSize: 14.sp),
+                            prefixIcon: Icon(Icons.email_outlined, size: 20.r),
+                            border: OutlineInputBorder(
+                              borderRadius: Responsive.borderRadius(12),
                             ),
                           ),
-                          child: isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text(
-                                  'Create Account',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            if (!value.contains('@')) {
+                              return 'Please enter a valid email';
+                            }
+                            return null;
+                          },
+                          enabled: !isLoading,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      Responsive.verticalSpace(16),
 
-                    // Login Link
-                    FadeIn(
-                      duration: const Duration(milliseconds: 600),
-                      delay: const Duration(milliseconds: 700),
-                      child: TextButton(
-                        onPressed: isLoading
-                            ? null
-                            : () {
-                                Navigator.pop(context);
-                              },
-                        child: Text.rich(
-                          TextSpan(
-                            text: 'Already have an account? ',
-                            style: theme.textTheme.bodyMedium,
-                            children: [
-                              TextSpan(
-                                text: 'Login',
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                      // Role Selection
+                      FadeInLeft(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 300),
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedRole,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'Role',
+                            labelStyle: TextStyle(fontSize: 14.sp),
+                            prefixIcon: Icon(Icons.work_outline, size: 20.r),
+                            border: OutlineInputBorder(
+                              borderRadius: Responsive.borderRadius(12),
+                            ),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'receptionist',
+                              child: Text(
+                                'Receptionist',
+                                style: TextStyle(fontSize: 14.sp),
                               ),
-                            ],
+                            ),
+                            DropdownMenuItem(
+                              value: 'teacher',
+                              child: Text(
+                                'Teacher',
+                                style: TextStyle(fontSize: 14.sp),
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'dean',
+                              child: Text(
+                                'Dean',
+                                style: TextStyle(fontSize: 14.sp),
+                              ),
+                            ),
+                          ],
+                          onChanged: isLoading
+                              ? null
+                              : (value) {
+                                  setState(() {
+                                    _selectedRole = value!;
+                                  });
+                                },
+                        ),
+                      ),
+                      Responsive.verticalSpace(16),
+
+                      // Class Name (for teachers only)
+                      if (_selectedRole == 'teacher')
+                        FadeIn(
+                          duration: const Duration(milliseconds: 400),
+                          child: TextFormField(
+                            controller: _classNameController,
+                            style: TextStyle(fontSize: 14.sp),
+                            decoration: InputDecoration(
+                              labelText: 'Class Name',
+                              labelStyle: TextStyle(fontSize: 14.sp),
+                              prefixIcon: Icon(
+                                Icons.class_outlined,
+                                size: 20.r,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: Responsive.borderRadius(12),
+                              ),
+                              hintText: 'e.g., Class A',
+                              hintStyle: TextStyle(fontSize: 14.sp),
+                            ),
+                            validator: (value) {
+                              if (_selectedRole == 'teacher' &&
+                                  (value == null || value.trim().isEmpty)) {
+                                return 'Please enter your class name';
+                              }
+                              return null;
+                            },
+                            enabled: !isLoading,
+                          ),
+                        ),
+                      if (_selectedRole == 'teacher')
+                        Responsive.verticalSpace(16),
+
+                      // Password Field
+                      FadeInRight(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 400),
+                        child: TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          style: TextStyle(fontSize: 14.sp),
+                          decoration: InputDecoration(
+                            labelText: 'Password',
+                            labelStyle: TextStyle(fontSize: 14.sp),
+                            prefixIcon: Icon(Icons.lock_outline, size: 20.r),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                size: 20.r,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: Responsive.borderRadius(12),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a password';
+                            }
+                            if (value.length < 6) {
+                              return 'Password must be at least 6 characters';
+                            }
+                            return null;
+                          },
+                          enabled: !isLoading,
+                        ),
+                      ),
+                      Responsive.verticalSpace(16),
+
+                      // Confirm Password Field
+                      FadeInLeft(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 500),
+                        child: TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: _obscureConfirmPassword,
+                          style: TextStyle(fontSize: 14.sp),
+                          decoration: InputDecoration(
+                            labelText: 'Confirm Password',
+                            labelStyle: TextStyle(fontSize: 14.sp),
+                            prefixIcon: Icon(Icons.lock_outline, size: 20.r),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                size: 20.r,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
+                                });
+                              },
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: Responsive.borderRadius(12),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value != _passwordController.text) {
+                              return 'Passwords do not match';
+                            }
+                            return null;
+                          },
+                          enabled: !isLoading,
+                        ),
+                      ),
+                      Responsive.verticalSpace(32),
+
+                      // Signup Button
+                      FadeInUp(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 600),
+                        child: SizedBox(
+                          height: Responsive.buttonHeight(context),
+                          child: ElevatedButton(
+                            onPressed: isLoading ? null : _handleSignup,
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: Responsive.borderRadius(12),
+                              ),
+                            ),
+                            child: isLoading
+                                ? SizedBox(
+                                    height: 24.r,
+                                    width: 24.r,
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    'Create Account',
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      Responsive.verticalSpace(16),
+
+                      // Login Link
+                      FadeIn(
+                        duration: const Duration(milliseconds: 600),
+                        delay: const Duration(milliseconds: 700),
+                        child: TextButton(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  Navigator.pop(context);
+                                },
+                          child: Text.rich(
+                            TextSpan(
+                              text: 'Already have an account? ',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 14.sp,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: 'Login',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14.sp,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

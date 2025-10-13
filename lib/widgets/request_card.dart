@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/request_model.dart';
+import '../utils/responsive.dart';
 
 class RequestCard extends StatefulWidget {
   final RequestModel request;
@@ -94,26 +96,26 @@ class _RequestCardState extends State<RequestCard>
       child: SlideTransition(
         position: _slideAnimation,
         child: Card(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: EdgeInsets.only(bottom: 12.h),
           elevation: 0,
           color: _getStatusColor(widget.request.status).withOpacity(0.1),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: Responsive.borderRadius(16),
             side: BorderSide(
               color: _getStatusColor(widget.request.status).withOpacity(0.3),
               width: 1,
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: Responsive.padding(all: 16),
             child: Row(
               children: [
                 Icon(
                   _getStatusIcon(widget.request.status),
                   color: _getStatusColor(widget.request.status),
-                  size: 32,
+                  size: 32.r,
                 ),
-                const SizedBox(width: 16),
+                Responsive.horizontalSpace(16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,6 +124,7 @@ class _RequestCardState extends State<RequestCard>
                         widget.request.studentName,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          fontSize: 16.sp,
                           decoration: TextDecoration.lineThrough,
                         ),
                       ),
@@ -130,6 +133,7 @@ class _RequestCardState extends State<RequestCard>
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: _getStatusColor(widget.request.status),
                           fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
                         ),
                       ),
                     ],
@@ -145,12 +149,12 @@ class _RequestCardState extends State<RequestCard>
 
   Widget _buildPendingCard(ThemeData theme) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12.h),
       elevation: 2,
       shadowColor: theme.colorScheme.primary.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: Responsive.borderRadius(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: Responsive.padding(all: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -158,7 +162,7 @@ class _RequestCardState extends State<RequestCard>
               children: [
                 // Student Icon
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: EdgeInsets.all(10.r),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primaryContainer,
                     shape: BoxShape.circle,
@@ -166,10 +170,10 @@ class _RequestCardState extends State<RequestCard>
                   child: Icon(
                     Icons.person,
                     color: theme.colorScheme.onPrimaryContainer,
-                    size: 24,
+                    size: 24.r,
                   ),
                 ),
-                const SizedBox(width: 16),
+                Responsive.horizontalSpace(16),
 
                 // Student Info
                 Expanded(
@@ -180,38 +184,41 @@ class _RequestCardState extends State<RequestCard>
                         widget.request.studentName,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          fontSize: 16.sp,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      Responsive.verticalSpace(4),
                       Row(
                         children: [
                           Icon(
                             Icons.class_outlined,
-                            size: 14,
+                            size: 14.r,
                             color: theme.colorScheme.onSurface.withOpacity(0.6),
                           ),
-                          const SizedBox(width: 4),
+                          Responsive.horizontalSpace(4),
                           Text(
                             widget.request.className,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurface.withOpacity(
                                 0.6,
                               ),
+                              fontSize: 12.sp,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          Responsive.horizontalSpace(12),
                           Icon(
                             Icons.access_time,
-                            size: 14,
+                            size: 14.r,
                             color: theme.colorScheme.onSurface.withOpacity(0.6),
                           ),
-                          const SizedBox(width: 4),
+                          Responsive.horizontalSpace(4),
                           Text(
                             widget.request.getFormattedTime(),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurface.withOpacity(
                                 0.6,
                               ),
+                              fontSize: 12.sp,
                             ),
                           ),
                         ],
@@ -222,15 +229,15 @@ class _RequestCardState extends State<RequestCard>
 
                 // Status Chip
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
                     color: _getStatusColor(
                       widget.request.status,
                     ).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: Responsive.borderRadius(20),
                     border: Border.all(
                       color: _getStatusColor(
                         widget.request.status,
@@ -243,7 +250,7 @@ class _RequestCardState extends State<RequestCard>
                     children: [
                       Icon(
                         _getStatusIcon(widget.request.status),
-                        size: 14,
+                        size: 14.r,
                         color: _getStatusColor(widget.request.status),
                       ),
                       const SizedBox(width: 4),

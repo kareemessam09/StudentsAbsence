@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../utils/responsive.dart';
 
 class EmptyState extends StatefulWidget {
   final String message;
@@ -69,18 +71,18 @@ class _EmptyStateState extends State<EmptyState>
             children: [
               // Animated Icon
               Container(
-                padding: const EdgeInsets.all(24),
+                padding: Responsive.padding(all: 24),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primaryContainer.withOpacity(0.3),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   widget.icon,
-                  size: widget.iconSize,
+                  size: widget.iconSize.r,
                   color: theme.colorScheme.onSurface.withOpacity(0.3),
                 ),
               ),
-              const SizedBox(height: 24),
+              Responsive.verticalSpace(24),
 
               // Main Message
               Text(
@@ -88,19 +90,21 @@ class _EmptyStateState extends State<EmptyState>
                 style: theme.textTheme.titleLarge?.copyWith(
                   color: theme.colorScheme.onSurface.withOpacity(0.6),
                   fontWeight: FontWeight.bold,
+                  fontSize: 18.sp,
                 ),
                 textAlign: TextAlign.center,
               ),
 
               // Subtitle (optional)
               if (widget.subtitle != null) ...[
-                const SizedBox(height: 8),
+                Responsive.verticalSpace(8),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 48),
+                  padding: Responsive.padding(horizontal: 48),
                   child: Text(
                     widget.subtitle!,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface.withOpacity(0.4),
+                      fontSize: 14.sp,
                     ),
                     textAlign: TextAlign.center,
                   ),
