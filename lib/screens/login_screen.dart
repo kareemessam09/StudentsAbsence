@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../cubits/user_cubit.dart';
 import '../cubits/user_state.dart';
@@ -46,8 +45,8 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.pushReplacementNamed(context, '/receptionist');
           } else if (state.user.isTeacher) {
             Navigator.pushReplacementNamed(context, '/teacher');
-          } else if (state.user.isDean) {
-            Navigator.pushReplacementNamed(context, '/dean');
+          } else if (state.user.isManager) {
+            Navigator.pushReplacementNamed(context, '/manager');
           }
         } else if (state is UserError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -251,139 +250,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       Responsive.verticalSpace(32),
-
-                      // Demo Accounts
-                      FadeIn(
-                        duration: const Duration(milliseconds: 600),
-                        delay: const Duration(milliseconds: 600),
-                        child: _DemoAccounts(isLoading: isLoading),
-                      ),
                     ],
                   ),
                 ),
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _DemoAccounts extends StatelessWidget {
-  final bool isLoading;
-
-  const _DemoAccounts({required this.isLoading});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      elevation: Responsive.cardElevation(context),
-      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
-      shape: RoundedRectangleBorder(borderRadius: Responsive.borderRadius(12)),
-      child: Padding(
-        padding: Responsive.padding(all: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 20.r,
-                  color: theme.colorScheme.primary,
-                ),
-                Responsive.horizontalSpace(8),
-                Text(
-                  'Demo Accounts',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14.sp,
-                  ),
-                ),
-              ],
-            ),
-            Responsive.verticalSpace(12),
-            _DemoAccountItem(
-              role: 'Receptionist',
-              email: 'sarah.receptionist@school.com',
-              isLoading: isLoading,
-            ),
-            Responsive.verticalSpace(8),
-            _DemoAccountItem(
-              role: 'Teacher (Class A)',
-              email: 'emily.teacher@school.com',
-              isLoading: isLoading,
-            ),
-            Responsive.verticalSpace(8),
-            _DemoAccountItem(
-              role: 'Dean',
-              email: 'robert.dean@school.com',
-              isLoading: isLoading,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DemoAccountItem extends StatelessWidget {
-  final String role;
-  final String email;
-  final bool isLoading;
-
-  const _DemoAccountItem({
-    required this.role,
-    required this.email,
-    required this.isLoading,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: isLoading
-          ? null
-          : () {
-              context.read<UserCubit>().login(email, 'password123');
-            },
-      borderRadius: Responsive.borderRadius(8),
-      child: Padding(
-        padding: Responsive.padding(all: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    role,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13.sp,
-                    ),
-                  ),
-                  Responsive.verticalSpace(2),
-                  Text(
-                    email,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                      fontSize: 11.sp,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16.r,
-              color: theme.colorScheme.onSurface.withOpacity(0.4),
-            ),
-          ],
         ),
       ),
     );

@@ -5,6 +5,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../cubits/user_cubit.dart';
 import '../cubits/user_state.dart';
 import '../utils/responsive.dart';
+import '../models/class_model.dart';
+// TODO: Re-add when backend supports public /classes endpoint:
+// import '../services/class_service.dart';
+// import '../config/service_locator.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -19,11 +23,29 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _classNameController = TextEditingController();
 
   String _selectedRole = 'receptionist';
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+
+  // For teachers - class selection
+  List<ClassModel> _availableClasses = [];
+  Set<String> _selectedClassIds = {};
+  bool _handlesAllClasses = false;
+  bool _isLoadingClasses = false;
+
+  // TODO: Re-add when backend supports public /classes endpoint:
+  // final ClassService _classService = getIt<ClassService>();
+
+  @override
+  void initState() {
+    super.initState();
+    // TODO: Uncomment when backend /classes endpoint allows public access:
+    // _fetchAvailableClasses();
+  }
+
+  // TODO: Add method to fetch classes when backend supports public /classes endpoint
+  // Future<void> _fetchAvailableClasses() async { ... }
 
   @override
   void dispose() {
@@ -31,21 +53,42 @@ class _SignupScreenState extends State<SignupScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _classNameController.dispose();
     super.dispose();
   }
 
   void _handleSignup() {
     if (_formKey.currentState!.validate()) {
       final cubit = context.read<UserCubit>();
+
+      // For teachers, validate class selection if not handling all classes
+      if (_selectedRole == 'teacher' &&
+          !_handlesAllClasses &&
+          _availableClasses.isNotEmpty &&
+          _selectedClassIds.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Please select at least one class or enable "Handle All Classes"',
+            ),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      // Send the selected role directly to backend
+      // Backend accepts: receptionist, teacher, manager
+      // TODO: Add classIds parameter when backend supports it during registration
       cubit.signup(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        role: _selectedRole,
-        className: _selectedRole == 'teacher'
-            ? _classNameController.text.trim()
-            : null,
+        confirmPassword: _confirmPasswordController.text,
+        isManager: _selectedRole == 'manager', // For backward compatibility
+        role: _selectedRole, // Send actual role to backend
+        // classIds: _selectedClassIds.toList(), // TODO: Uncomment when backend supports
+        // handlesAllClasses: _handlesAllClasses, // TODO: Uncomment when backend supports
       );
     }
   }
@@ -62,8 +105,8 @@ class _SignupScreenState extends State<SignupScreen> {
             Navigator.pushReplacementNamed(context, '/receptionist');
           } else if (state.user.isTeacher) {
             Navigator.pushReplacementNamed(context, '/teacher');
-          } else if (state.user.isDean) {
-            Navigator.pushReplacementNamed(context, '/dean');
+          } else if (state.user.isManager) {
+            Navigator.pushReplacementNamed(context, '/manager');
           }
         } else if (state is UserError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -217,9 +260,9 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ),
                             DropdownMenuItem(
-                              value: 'dean',
+                              value: 'manager',
                               child: Text(
-                                'Dean',
+                                'Manager',
                                 style: TextStyle(fontSize: 14.sp),
                               ),
                             ),
@@ -235,34 +278,160 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       Responsive.verticalSpace(16),
 
-                      // Class Name (for teachers only)
+                      // Class Selection (for teachers only)
                       if (_selectedRole == 'teacher')
                         FadeIn(
                           duration: const Duration(milliseconds: 400),
-                          child: TextFormField(
-                            controller: _classNameController,
-                            style: TextStyle(fontSize: 14.sp),
-                            decoration: InputDecoration(
-                              labelText: 'Class Name',
-                              labelStyle: TextStyle(fontSize: 14.sp),
-                              prefixIcon: Icon(
-                                Icons.class_outlined,
-                                size: 20.r,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // All Classes Checkbox
+                              CheckboxListTile(
+                                title: Text(
+                                  'Handle All Classes',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'You will see all attendance requests',
+                                  style: TextStyle(fontSize: 12.sp),
+                                ),
+                                value: _handlesAllClasses,
+                                onChanged: isLoading
+                                    ? null
+                                    : (value) {
+                                        setState(() {
+                                          _handlesAllClasses = value ?? false;
+                                          if (_handlesAllClasses) {
+                                            _selectedClassIds.clear();
+                                          }
+                                        });
+                                      },
+                                contentPadding: EdgeInsets.zero,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: Responsive.borderRadius(12),
-                              ),
-                              hintText: 'e.g., Class A',
-                              hintStyle: TextStyle(fontSize: 14.sp),
-                            ),
-                            validator: (value) {
-                              if (_selectedRole == 'teacher' &&
-                                  (value == null || value.trim().isEmpty)) {
-                                return 'Please enter your class name';
-                              }
-                              return null;
-                            },
-                            enabled: !isLoading,
+
+                              if (!_handlesAllClasses) ...[
+                                Responsive.verticalSpace(8),
+                                Text(
+                                  'Select Classes to Manage:',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Responsive.verticalSpace(8),
+
+                                // Show loading, empty state, or classes list
+                                if (_isLoadingClasses)
+                                  Container(
+                                    padding: Responsive.padding(all: 24),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: theme.colorScheme.outline,
+                                      ),
+                                      borderRadius: Responsive.borderRadius(12),
+                                    ),
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  )
+                                else if (_availableClasses.isEmpty)
+                                  Container(
+                                    padding: Responsive.padding(all: 16),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: theme.colorScheme.outline
+                                            .withOpacity(0.5),
+                                      ),
+                                      borderRadius: Responsive.borderRadius(12),
+                                      color: theme
+                                          .colorScheme
+                                          .surfaceContainerHighest
+                                          .withOpacity(0.3),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.info_outline,
+                                          color: theme.colorScheme.primary,
+                                          size: 32.r,
+                                        ),
+                                        Responsive.verticalSpace(8),
+                                        Text(
+                                          'Classes will be assigned after signup',
+                                          style: TextStyle(
+                                            fontSize: 14.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        Responsive.verticalSpace(4),
+                                        Text(
+                                          'After creating your teacher account, a manager can assign classes to you from the admin panel.',
+                                          style: TextStyle(
+                                            fontSize: 12.sp,
+                                            color: theme.colorScheme.onSurface
+                                                .withOpacity(0.6),
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                else
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: theme.colorScheme.outline,
+                                      ),
+                                      borderRadius: Responsive.borderRadius(12),
+                                    ),
+                                    child: Column(
+                                      children: _availableClasses.map((
+                                        classModel,
+                                      ) {
+                                        return CheckboxListTile(
+                                          title: Text(
+                                            classModel.name,
+                                            style: TextStyle(fontSize: 14.sp),
+                                          ),
+                                          subtitle:
+                                              classModel.description.isNotEmpty
+                                              ? Text(
+                                                  classModel.description,
+                                                  style: TextStyle(
+                                                    fontSize: 12.sp,
+                                                  ),
+                                                )
+                                              : null,
+                                          value: _selectedClassIds.contains(
+                                            classModel.id,
+                                          ),
+                                          onChanged: isLoading
+                                              ? null
+                                              : (value) {
+                                                  setState(() {
+                                                    if (value == true) {
+                                                      _selectedClassIds.add(
+                                                        classModel.id,
+                                                      );
+                                                    } else {
+                                                      _selectedClassIds.remove(
+                                                        classModel.id,
+                                                      );
+                                                    }
+                                                  });
+                                                },
+                                          dense: true,
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                              ],
+                            ],
                           ),
                         ),
                       if (_selectedRole == 'teacher')

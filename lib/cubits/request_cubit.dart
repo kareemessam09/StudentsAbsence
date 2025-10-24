@@ -13,8 +13,10 @@ class RequestCubit extends Cubit<RequestState> {
   void loadRequests() {
     emit(RequestLoading());
     try {
-      // Load mock requests
-      final requests = RequestModel.mockRequests;
+      // TODO: Replace RequestCubit with NotificationCubit
+      // This cubit is deprecated and should not be used for new features
+      // Start with empty list - use backend API instead
+      final requests = <RequestModel>[];
       emit(RequestLoaded(requests));
     } catch (e) {
       emit(RequestError(e.toString()));
@@ -94,5 +96,41 @@ class RequestCubit extends Cubit<RequestState> {
           .toList();
     }
     return [];
+  }
+
+  // Get requests for a teacher based on their managed classes
+  List<RequestModel> getRequestsForTeacher({
+    required List<String>? classNames,
+    required bool handlesAllClasses,
+  }) {
+    final currentState = state;
+    if (currentState is RequestLoaded) {
+      if (handlesAllClasses) {
+        // Return all requests
+        return currentState.requests;
+      }
+
+      if (classNames == null || classNames.isEmpty) {
+        return [];
+      }
+
+      // Return requests for teacher's classes
+      return currentState.requests
+          .where((request) => classNames.contains(request.className))
+          .toList();
+    }
+    return [];
+  }
+
+  // Get pending requests for a teacher
+  List<RequestModel> getPendingRequestsForTeacher({
+    required List<String>? classNames,
+    required bool handlesAllClasses,
+  }) {
+    final allRequests = getRequestsForTeacher(
+      classNames: classNames,
+      handlesAllClasses: handlesAllClasses,
+    );
+    return allRequests.where((request) => request.status == 'pending').toList();
   }
 }

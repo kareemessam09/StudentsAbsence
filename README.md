@@ -8,8 +8,14 @@ A modern Flutter application for managing school attendance with elegant Materia
 - **Role-Based Access**: Separate interfaces for Receptionists, Teachers, and Dean
 - **Attendance Management**: Send and track attendance requests
 - **Real-time Status Updates**: Track request status (Pending, Accepted, Not Found)
-- **Dean Dashboard**: Comprehensive statistics and analytics across all classes
-- **Mock Data**: Pre-populated sample data for testing
+- **Dean Dashboard**: Comprehensive statistics dashboard with:
+  - Overall school statistics (total students, attendance rates, capacity usage)
+  - Per-class breakdowns showing present/absent students
+  - Real-time data with auto-refresh every 60 seconds
+  - Color-coded attendance indicators
+  - Notifications tab for monitoring all school activities
+- **Backend Integration**: Full integration with Node.js backend API
+- **Auto-refresh**: Teachers and managers get automatic notification updates
 
 ### 🎨 Design & UX
 - **Material 3 Design**: Modern, clean UI with elevation and depth
@@ -146,16 +152,16 @@ context.read<RequestCubit>().updateRequestStatus(
 - 🔵 **Blue**: Primary theme color
 
 ## 🔮 Future Enhancements
-- [ ] Backend API integration
-- [ ] Real-time push notifications
-- [ ] User authentication
-- [ ] Data persistence with local database
+- [x] Backend API integration ✅
+- [x] User authentication ✅
+- [x] Admin dashboard ✅
+- [x] Analytics and reporting ✅
+- [ ] Real-time push notifications (Socket.IO)
 - [ ] Search and filter functionality
 - [ ] Date/time range selection
 - [ ] Export reports (PDF/CSV)
-- [ ] Admin dashboard
-- [ ] Analytics and reporting
 - [ ] Multi-language support
+- [ ] Advanced analytics with charts
 
 ## 🤝 Contributing
 Contributions, issues, and feature requests are welcome!
@@ -169,3 +175,55 @@ Created with ❤️ using Flutter
 ---
 
 **Note**: This app uses mock data for demonstration. In production, integrate with a backend API for real-time data management.
+
+## Recent Updates (October 23, 2025)
+
+### Dean Dashboard Enhancement 🎉
+- ✅ **Complete redesign** with TabBarView (Statistics + Notifications)
+- ✅ **Overall statistics cards**:
+  - Total Classes
+  - Total Students
+  - Present Today
+  - Absent Today
+  - Attendance Rate (color-coded: green ≥80%, orange ≥60%, red <60%)
+  - Capacity Utilization percentage
+- ✅ **Per-class statistics cards** showing:
+  - Class name and teacher ID
+  - Attendance percentage badge
+  - Total students, present, absent, and available spots
+  - Color-coded status indicators
+  - Tap-to-view-details (ready for implementation)
+- ✅ **Auto-refresh** every 60 seconds for real-time data
+- ✅ **Pull-to-refresh** support
+- ✅ **Notifications tab** with all school notifications
+- ✅ Integrated with ClassService.getClassStats() API
+- ✅ Beautiful animations with FadeInUp/FadeInDown
+- ✅ Proper loading states and error handling
+
+### Receptionist Screen Migration
+- ✅ Migrated from RequestCubit to NotificationCubit
+- ✅ Integrated with backend NotificationService API
+- ✅ Replaced hardcoded classes with backend data (ClassService)
+- ✅ Dynamic student fetching based on selected class
+- ✅ Real-time notification sending with proper error handling
+- ✅ Updated UI to display sent notifications with status
+- ✅ Added date formatting for notification timestamps
+- ✅ Proper loading states and error messages
+
+### Teacher Screen Enhancement
+- ✅ Added auto-refresh every 30 seconds for new notifications
+- ✅ Proper timer cleanup in dispose()
+- ✅ Maintains manual pull-to-refresh capability
+
+### Code Cleanup
+- ✅ Removed 450+ lines of mock data from models
+- ✅ Removed unused methods and imports
+- ✅ All screens now use backend APIs
+- ✅ Zero compilation errors or warnings
+
+### Teacher Screen Enhancement
+- ✅ Added automatic notification refresh every 30 seconds
+- ✅ Teachers now receive new notifications from their assigned classes automatically
+- ✅ Manual pull-to-refresh still available
+- ✅ Proper timer cleanup on screen disposal
+- ✅ Backend filters notifications by teacher's assigned classes

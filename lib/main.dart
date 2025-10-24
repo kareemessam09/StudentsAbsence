@@ -3,16 +3,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'cubits/request_cubit.dart';
+import 'config/service_locator.dart';
+import 'cubits/notification_cubit.dart';
 import 'cubits/user_cubit.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/receptionist_screen.dart';
 import 'screens/teacher_screen.dart';
-import 'screens/dean_screen.dart';
+import 'screens/manager_screen.dart';
 import 'screens/profile_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Setup dependency injection
+  await setupServiceLocator();
+
   runApp(const StudentNotifier());
 }
 
@@ -23,8 +29,21 @@ class StudentNotifier extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => UserCubit()),
-        BlocProvider(create: (context) => RequestCubit()),
+        BlocProvider(
+          create: (context) {
+            final cubit = UserCubit();
+            // Check for saved login on app start
+            cubit.checkAuthStatus();
+            return cubit;
+          },
+        ),
+        BlocProvider(
+          create: (context) {
+            final cubit = NotificationCubit();
+            // Load notifications on app start (after login)
+            return cubit;
+          },
+        ),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812), // iPhone 11 Pro dimensions as base
@@ -93,8 +112,8 @@ class StudentNotifier extends StatelessWidget {
                 case '/teacher':
                   page = const TeacherScreen();
                   break;
-                case '/dean':
-                  page = const DeanScreen();
+                case '/manager':
+                  page = const ManagerScreen();
                   break;
                 case '/profile':
                   page = const ProfileScreen();

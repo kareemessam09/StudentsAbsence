@@ -1,13 +1,16 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uuid/uuid.dart';
 import '../models/user_model.dart';
+import '../services/auth_service.dart';
+import '../services/user_service.dart';
+import '../config/service_locator.dart';
 import 'user_state.dart';
 
 class UserCubit extends Cubit<UserState> {
   UserCubit() : super(UserInitial());
 
-  final _uuid = const Uuid();
-  final List<UserModel> _users = List.from(UserModel.mockUsers);
+  // Get services from service locator
+  final AuthService _authService = getIt<AuthService>();
+  final UserService _userService = getIt<UserService>();
 
   // Get current user if authenticated
   UserModel? get currentUser {
@@ -18,30 +21,37 @@ class UserCubit extends Cubit<UserState> {
     return null;
   }
 
+  // Check if user is logged in on app start
+  Future<void> checkAuthStatus() async {
+    final isLoggedIn = await _authService.isLoggedIn();
+    if (isLoggedIn) {
+      final user = await _authService.getSavedUser();
+      if (user != null) {
+        emit(UserAuthenticated(user));
+      }
+    }
+  }
+
   // Login with email and password
   Future<void> login(String email, String password) async {
     emit(UserLoading());
 
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 1));
+      final result = await _authService.login(email: email, password: password);
 
-      // Find user by email (simulated authentication)
-      final user = _users.where((u) => u.email == email).firstOrNull;
+      print('Login result: $result'); // Debug print
 
-      if (user != null) {
-        // In a real app, you'd verify the password here
-        // For now, accept any non-empty password
-        if (password.isNotEmpty) {
-          emit(UserAuthenticated(user));
-        } else {
-          emit(const UserError('Invalid password'));
-        }
+      if (result['success']) {
+        final user = result['user'] as UserModel;
+        emit(UserAuthenticated(user));
       } else {
-        emit(const UserError('User not found'));
+        final errorMessage = result['message'] ?? 'Login failed';
+        print('Login failed: $errorMessage'); // Debug print
+        emit(UserError(errorMessage));
       }
     } catch (e) {
-      emit(UserError(e.toString()));
+      print('Login exception: $e'); // Debug print
+      emit(UserError('An unexpected error occurred: ${e.toString()}'));
     }
   }
 
@@ -50,94 +60,55 @@ class UserCubit extends Cubit<UserState> {
     required String name,
     required String email,
     required String password,
-    required String role,
-    String? className,
+    required String confirmPassword,
+    required bool isManager, // Kept for backward compatibility
+    String? role, // New: direct role specification
   }) async {
     emit(UserLoading());
 
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Check if email already exists
-      final existingUser = _users.where((u) => u.email == email).firstOrNull;
-      if (existingUser != null) {
-        emit(const UserError('Email already exists'));
-        return;
-      }
-
-      // Validate role
-      if (role != 'receptionist' && role != 'teacher') {
-        emit(const UserError('Invalid role'));
-        return;
-      }
-
-      // Validate className for teachers
-      if (role == 'teacher' && (className == null || className.isEmpty)) {
-        emit(const UserError('Class name is required for teachers'));
-        return;
-      }
-
-      // Create new user
-      final newUser = UserModel(
-        id: _uuid.v4(),
+      final result = await _authService.register(
         name: name,
         email: email,
-        role: role,
-        className: className,
+        password: password,
+        confirmPassword: confirmPassword,
+        isManager: isManager,
+        role: role, // Pass role to auth service
       );
 
-      // Add to users list (simulated database)
-      _users.add(newUser);
-
-      // Auto-login after signup
-      emit(UserAuthenticated(newUser));
+      if (result['success']) {
+        final user = result['user'] as UserModel;
+        emit(UserAuthenticated(user));
+      } else {
+        final errorMessage = result['message'] ?? 'Registration failed';
+        print('Signup failed: $errorMessage'); // Debug print
+        emit(UserError(errorMessage));
+      }
     } catch (e) {
-      emit(UserError(e.toString()));
+      print('Signup exception: $e'); // Debug print
+      emit(UserError('An unexpected error occurred: ${e.toString()}'));
     }
   }
 
-  // Update user's managed class (for teachers)
-  Future<void> updateClassName(String newClassName) async {
-    final current = currentUser;
-    if (current == null) {
-      emit(const UserError('No user logged in'));
-      return;
-    }
-
-    if (!current.isTeacher) {
-      emit(const UserError('Only teachers can change their class'));
-      return;
-    }
-
-    if (newClassName.isEmpty) {
-      emit(const UserError('Class name cannot be empty'));
-      return;
-    }
-
+  // Logout user
+  void logout() async {
     emit(UserLoading());
 
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Update user in the list
-      final updatedUser = current.copyWith(className: newClassName);
-      final index = _users.indexWhere((u) => u.id == current.id);
-      if (index != -1) {
-        _users[index] = updatedUser;
-      }
-
-      emit(UserAuthenticated(updatedUser));
+      await _authService.logout();
+      emit(UserUnauthenticated());
     } catch (e) {
-      emit(UserError(e.toString()));
-      // Restore previous state
-      emit(UserAuthenticated(current));
+      // Still logout locally even if API call fails
+      emit(UserUnauthenticated());
     }
   }
 
-  // Update user profile (name, email)
-  Future<void> updateProfile({String? name, String? email}) async {
+  // Update user profile (name, email, assignedClasses)
+  Future<void> updateProfile({
+    String? name,
+    String? email,
+    List<String>? assignedClasses,
+  }) async {
     final current = currentUser;
     if (current == null) {
       emit(const UserError('No user logged in'));
@@ -147,45 +118,59 @@ class UserCubit extends Cubit<UserState> {
     emit(UserLoading());
 
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(milliseconds: 500));
+      final result = await _userService.updateMyProfile(
+        name: name,
+        email: email,
+        assignedClasses: assignedClasses,
+      );
 
-      // Check if new email already exists (if changing email)
-      if (email != null && email != current.email) {
-        final existingUser = _users
-            .where((u) => u.email == email && u.id != current.id)
-            .firstOrNull;
-        if (existingUser != null) {
-          emit(const UserError('Email already exists'));
-          emit(UserAuthenticated(current));
-          return;
-        }
+      if (result['success']) {
+        final updatedUser = result['user'] as UserModel;
+        emit(UserAuthenticated(updatedUser));
+      } else {
+        emit(UserError(result['message'] ?? 'Update failed'));
+        // Restore previous state
+        emit(UserAuthenticated(current));
       }
-
-      // Update user
-      final updatedUser = current.copyWith(name: name, email: email);
-
-      final index = _users.indexWhere((u) => u.id == current.id);
-      if (index != -1) {
-        _users[index] = updatedUser;
-      }
-
-      emit(UserAuthenticated(updatedUser));
     } catch (e) {
-      emit(UserError(e.toString()));
-      // Restore previous state
+      emit(UserError('Failed to update profile: ${e.toString()}'));
       emit(UserAuthenticated(current));
     }
   }
 
-  // Logout
-  void logout() {
-    emit(UserUnauthenticated());
+  // Update password
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final current = currentUser;
+    if (current == null) {
+      emit(const UserError('No user logged in'));
+      return;
+    }
+
+    emit(UserLoading());
+
+    try {
+      final result = await _authService.updatePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+        confirmPassword: confirmPassword,
+      );
+
+      if (result['success']) {
+        emit(UserAuthenticated(current));
+      } else {
+        emit(UserError(result['message'] ?? 'Password update failed'));
+        emit(UserAuthenticated(current));
+      }
+    } catch (e) {
+      emit(UserError('Failed to update password: ${e.toString()}'));
+      emit(UserAuthenticated(current));
+    }
   }
 
   // Check if user is authenticated
   bool get isAuthenticated => state is UserAuthenticated;
-
-  // Get all users (for debugging)
-  List<UserModel> get allUsers => List.unmodifiable(_users);
 }

@@ -1,122 +1,114 @@
-import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
-class UserModel extends Equatable {
+@immutable
+class UserModel {
   final String id;
   final String name;
   final String email;
-  final String role; // "receptionist", "teacher", or "dean"
-  final String? className; // only for teachers
+  final String role; // 'receptionist', 'teacher', 'manager'
+  final bool isActive;
+  final DateTime? lastLogin;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   const UserModel({
     required this.id,
     required this.name,
     required this.email,
     required this.role,
-    this.className,
+    this.isActive = true,
+    this.lastLogin,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
-  // CopyWith method
+  // Factory constructor to create UserModel from JSON
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['_id'] ?? json['id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      role: json['role'] ?? 'receptionist',
+      isActive: json['isActive'] ?? true,
+      lastLogin: json['lastLogin'] != null
+          ? DateTime.parse(json['lastLogin'])
+          : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.now(),
+    );
+  }
+
+  // Convert UserModel to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'role': role,
+      'isActive': isActive,
+      'lastLogin': lastLogin?.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  // CopyWith method for immutability
   UserModel copyWith({
     String? id,
     String? name,
     String? email,
     String? role,
-    String? className,
+    bool? isActive,
+    DateTime? lastLogin,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return UserModel(
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
       role: role ?? this.role,
-      className: className ?? this.className,
+      isActive: isActive ?? this.isActive,
+      lastLogin: lastLogin ?? this.lastLogin,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
-  // Convert to Map for serialization
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'email': email,
-      'role': role,
-      'className': className,
-    };
+  // Helper methods
+  bool get isReceptionist => role.toLowerCase() == 'receptionist';
+  bool get isTeacher => role.toLowerCase() == 'teacher';
+  bool get isManager => role.toLowerCase() == 'manager';
+
+  String get displayRole {
+    switch (role.toLowerCase()) {
+      case 'receptionist':
+        return 'Receptionist';
+      case 'teacher':
+        return 'Teacher';
+      case 'manager':
+        return 'Manager';
+      default:
+        return role;
+    }
   }
-
-  // Create from Map for deserialization
-  factory UserModel.fromMap(Map<String, dynamic> map) {
-    return UserModel(
-      id: map['id'] as String,
-      name: map['name'] as String,
-      email: map['email'] as String,
-      role: map['role'] as String,
-      className: map['className'] as String?,
-    );
-  }
-
-  bool get isReceptionist => role == 'receptionist';
-  bool get isTeacher => role == 'teacher';
-  bool get isDean => role == 'dean';
-
-  @override
-  List<Object?> get props => [id, name, email, role, className];
 
   @override
   String toString() {
-    return 'UserModel(id: $id, name: $name, email: $email, role: $role, className: $className)';
+    return 'UserModel(id: $id, name: $name, email: $email, role: $role, isActive: $isActive)';
   }
 
-  // Mock users for testing
-  static List<UserModel> get mockUsers {
-    return [
-      const UserModel(
-        id: '1',
-        name: 'Sarah Johnson',
-        email: 'sarah.receptionist@school.com',
-        role: 'receptionist',
-      ),
-      const UserModel(
-        id: '2',
-        name: 'John Smith',
-        email: 'john.receptionist@school.com',
-        role: 'receptionist',
-      ),
-      const UserModel(
-        id: '3',
-        name: 'Dr. Emily Brown',
-        email: 'emily.teacher@school.com',
-        role: 'teacher',
-        className: 'Class A',
-      ),
-      const UserModel(
-        id: '4',
-        name: 'Prof. Michael Davis',
-        email: 'michael.teacher@school.com',
-        role: 'teacher',
-        className: 'Class B',
-      ),
-      const UserModel(
-        id: '5',
-        name: 'Ms. Lisa Wilson',
-        email: 'lisa.teacher@school.com',
-        role: 'teacher',
-        className: 'Class C',
-      ),
-      const UserModel(
-        id: '6',
-        name: 'Dr. Robert Dean',
-        email: 'robert.dean@school.com',
-        role: 'dean',
-      ),
-    ];
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is UserModel && other.id == id;
   }
 
-  // Helper method to find user by email
-  static UserModel? findByEmail(String email) {
-    try {
-      return mockUsers.firstWhere((user) => user.email == email);
-    } catch (e) {
-      return null;
-    }
-  }
+  @override
+  int get hashCode => id.hashCode;
 }
