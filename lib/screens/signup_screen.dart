@@ -6,9 +6,6 @@ import '../cubits/user_cubit.dart';
 import '../cubits/user_state.dart';
 import '../utils/responsive.dart';
 import '../models/class_model.dart';
-// TODO: Re-add when backend supports public /classes endpoint:
-// import '../services/class_service.dart';
-// import '../config/service_locator.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -33,19 +30,6 @@ class _SignupScreenState extends State<SignupScreen> {
   Set<String> _selectedClassIds = {};
   bool _handlesAllClasses = false;
   bool _isLoadingClasses = false;
-
-  // TODO: Re-add when backend supports public /classes endpoint:
-  // final ClassService _classService = getIt<ClassService>();
-
-  @override
-  void initState() {
-    super.initState();
-    // TODO: Uncomment when backend /classes endpoint allows public access:
-    // _fetchAvailableClasses();
-  }
-
-  // TODO: Add method to fetch classes when backend supports public /classes endpoint
-  // Future<void> _fetchAvailableClasses() async { ... }
 
   @override
   void dispose() {
@@ -79,7 +63,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
       // Send the selected role directly to backend
       // Backend accepts: receptionist, teacher, manager
-      // TODO: Add classIds parameter when backend supports it during registration
       cubit.signup(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
@@ -87,8 +70,6 @@ class _SignupScreenState extends State<SignupScreen> {
         confirmPassword: _confirmPasswordController.text,
         isManager: _selectedRole == 'manager', // For backward compatibility
         role: _selectedRole, // Send actual role to backend
-        // classIds: _selectedClassIds.toList(), // TODO: Uncomment when backend supports
-        // handlesAllClasses: _handlesAllClasses, // TODO: Uncomment when backend supports
       );
     }
   }
@@ -119,7 +100,15 @@ class _SignupScreenState extends State<SignupScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('Create Account'), centerTitle: true),
+        backgroundColor: const Color(0xFFF5F7FA),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1565C0)),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
         body: BlocBuilder<UserCubit, UserState>(
           builder: (context, state) {
             final isLoading = state is UserLoading;
@@ -138,13 +127,29 @@ class _SignupScreenState extends State<SignupScreen> {
                         duration: const Duration(milliseconds: 600),
                         child: Column(
                           children: [
-                            ClipRRect(
-                              borderRadius: Responsive.borderRadius(16),
-                              child: Image.asset(
-                                'logo.png',
-                                width: 120.r,
-                                height: 120.r,
-                                fit: BoxFit.contain,
+                            Container(
+                              width: 120.r,
+                              height: 120.r,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF1565C0,
+                                    ).withOpacity(0.2),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'logo.png',
+                                  width: 120.r,
+                                  height: 120.r,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
                             Responsive.verticalSpace(16),
@@ -256,13 +261,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               value: 'teacher',
                               child: Text(
                                 'Teacher',
-                                style: TextStyle(fontSize: 14.sp),
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: 'manager',
-                              child: Text(
-                                'Manager',
                                 style: TextStyle(fontSize: 14.sp),
                               ),
                             ),

@@ -1,13 +1,15 @@
 import 'dart:io' show Platform;
+import 'environment.dart';
 
 /// API Configuration Constants
 class ApiConfig {
-  // Base URL - Change this for production
-  // For Android Emulator use: 10.0.2.2 instead of localhost
-  // For iOS Simulator use: localhost
-  // For physical device use: your computer's IP address (e.g., 192.168.1.100)
+  // Base URL - Uses environment configuration
   static String get baseUrl {
-    // Detect if running on Android emulator
+    if (AppEnvironment.isProduction) {
+      return AppEnvironment.baseUrl;
+    }
+
+    // Development mode: detect platform for emulator/simulator support
     try {
       if (Platform.isAndroid) {
         return 'http://10.0.2.2:3000/api';
@@ -19,6 +21,11 @@ class ApiConfig {
   }
 
   static String get socketUrl {
+    if (AppEnvironment.isProduction) {
+      return AppEnvironment.socketUrl;
+    }
+
+    // Development mode: detect platform for emulator/simulator support
     try {
       if (Platform.isAndroid) {
         return 'http://10.0.2.2:3000';
@@ -93,7 +100,6 @@ class ApiEndpoints {
   static String notificationById(String id) => '/notifications/$id';
   static const String sendNotification =
       '/notifications/request'; // Renamed from notificationRequest
-  static const String notificationMessage = '/notifications/message';
   static String respondToNotification(String id) =>
       '/notifications/$id/respond'; // Renamed
   static String markAsRead(String id) => '/notifications/$id/read'; // Renamed
@@ -101,9 +107,8 @@ class ApiEndpoints {
   static const String unreadCount = '/notifications/unread/count'; // Renamed
   static String deleteNotification(String id) => '/notifications/$id'; // Added
   static const String sentNotifications = '/notifications/sent'; // Added
-  static String notificationsByStudent(String studentId) =>
-      '/notifications/student/$studentId';
 
   // Statistics
   static const String statisticsOverview = '/statistics/overview';
+  static const String dailyAttendance = '/statistics/daily-attendance';
 }

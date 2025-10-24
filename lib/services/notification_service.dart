@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../utils/app_logger.dart';
 import '../config/api_config.dart';
 import '../models/notification_model.dart';
 import 'api_service.dart';
@@ -41,11 +41,13 @@ class NotificationService {
           ? response.data['data']
           : response.data;
 
-      debugPrint(
+      AppLogger.network(
         'Notification response structure: ${responseData?.runtimeType}',
+        tag: 'NotificationService',
       );
-      debugPrint(
+      AppLogger.network(
         'Response keys: ${responseData is Map ? responseData.keys.toList() : "Not a map"}',
+        tag: 'NotificationService',
       );
 
       // Try to find notifications in the response
@@ -54,8 +56,9 @@ class NotificationService {
           : null;
 
       if (notificationsList == null) {
-        debugPrint(
+        AppLogger.error(
           'No notifications found in response. Response data: $responseData',
+          tag: 'NotificationService',
         );
         return {
           'success': false,
@@ -65,8 +68,9 @@ class NotificationService {
       }
 
       if (notificationsList is! List) {
-        debugPrint(
+        AppLogger.error(
           'Notifications is not a list. Type: ${notificationsList.runtimeType}',
+          tag: 'NotificationService',
         );
         return {
           'success': false,
@@ -80,15 +84,25 @@ class NotificationService {
             try {
               return NotificationModel.fromJson(json as Map<String, dynamic>);
             } catch (e) {
-              debugPrint('Error parsing notification: $e');
-              debugPrint('Problem JSON: $json');
+              AppLogger.error(
+                'Error parsing notification',
+                tag: 'NotificationService',
+                error: e,
+              );
+              AppLogger.error(
+                'Problem JSON: $json',
+                tag: 'NotificationService',
+              );
               return null;
             }
           })
           .whereType<NotificationModel>()
           .toList();
 
-      debugPrint('Successfully parsed ${notifications.length} notifications');
+      AppLogger.success(
+        'Successfully parsed ${notifications.length} notifications',
+        tag: 'NotificationService',
+      );
 
       return {
         'success': true,
@@ -143,8 +157,9 @@ class NotificationService {
     String? responseMessage,
   }) async {
     try {
-      debugPrint(
+      AppLogger.network(
         'Responding to notification: $notificationId, approved: $approved',
+        tag: 'NotificationService',
       );
 
       final response = await _apiService.post(
@@ -155,8 +170,14 @@ class NotificationService {
         },
       );
 
-      debugPrint('Response data type: ${response.data.runtimeType}');
-      debugPrint('Response data: ${response.data}');
+      AppLogger.network(
+        'Response data type: ${response.data.runtimeType}',
+        tag: 'NotificationService',
+      );
+      AppLogger.network(
+        'Response data: ${response.data}',
+        tag: 'NotificationService',
+      );
 
       // Handle nested response structure if present
       final notificationData =
@@ -172,8 +193,12 @@ class NotificationService {
         'message': approved ? 'Request approved' : 'Request rejected',
       };
     } catch (e, stackTrace) {
-      debugPrint('Error in respondToNotification: $e');
-      debugPrint('Stack trace: $stackTrace');
+      AppLogger.error(
+        'Error in respondToNotification',
+        tag: 'NotificationService',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return {'success': false, 'message': ApiService.getErrorMessage(e)};
     }
   }

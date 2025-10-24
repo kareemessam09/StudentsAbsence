@@ -5,6 +5,7 @@ class ClassModel extends Equatable {
   final String name;
   final String description;
   final String teacherId; // Reference to User (teacher)
+  final String? teacherName; // Teacher name if populated
   final List<String> studentIds; // References to Students
   final int capacity;
   final bool isActive;
@@ -18,6 +19,7 @@ class ClassModel extends Equatable {
     required this.name,
     this.description = '',
     required this.teacherId,
+    this.teacherName,
     this.studentIds = const [],
     this.capacity = 30,
     this.isActive = true,
@@ -33,6 +35,7 @@ class ClassModel extends Equatable {
     String? name,
     String? description,
     String? teacherId,
+    String? teacherName,
     List<String>? studentIds,
     int? capacity,
     bool? isActive,
@@ -46,6 +49,7 @@ class ClassModel extends Equatable {
       name: name ?? this.name,
       description: description ?? this.description,
       teacherId: teacherId ?? this.teacherId,
+      teacherName: teacherName ?? this.teacherName,
       studentIds: studentIds ?? this.studentIds,
       capacity: capacity ?? this.capacity,
       isActive: isActive ?? this.isActive,
@@ -63,6 +67,7 @@ class ClassModel extends Equatable {
       'name': name,
       'description': description,
       'teacher': teacherId,
+      'teacherName': teacherName,
       'students': studentIds,
       'capacity': capacity,
       'isActive': isActive,
@@ -77,11 +82,14 @@ class ClassModel extends Equatable {
   factory ClassModel.fromMap(Map<String, dynamic> map) {
     // Handle teacher field which can be null, String (ID), or Object with _id
     String teacherIdValue = '';
+    String? teacherNameValue;
+
     if (map['teacher'] != null) {
       if (map['teacher'] is String) {
         teacherIdValue = map['teacher'] as String;
       } else if (map['teacher'] is Map) {
         teacherIdValue = map['teacher']['_id'] as String;
+        teacherNameValue = map['teacher']['name'] as String?;
       }
     }
 
@@ -90,6 +98,7 @@ class ClassModel extends Equatable {
       name: map['name'] as String,
       description: map['description'] as String? ?? '',
       teacherId: teacherIdValue,
+      teacherName: teacherNameValue,
       studentIds: map['students'] is List
           ? (map['students'] as List).map((s) {
               if (s is String) return s;
@@ -126,6 +135,7 @@ class ClassModel extends Equatable {
     name,
     description,
     teacherId,
+    teacherName,
     studentIds,
     capacity,
     isActive,

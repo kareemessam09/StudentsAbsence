@@ -1,17 +1,104 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/notification_model.dart';
 import '../services/notification_service.dart';
+import '../services/socket_service.dart';
 import '../config/service_locator.dart';
 import 'notification_state.dart';
 
 class NotificationCubit extends Cubit<NotificationState> {
-  NotificationCubit() : super(NotificationInitial());
+  NotificationCubit() : super(NotificationInitial()) {
+    _setupSocketListeners();
+  }
 
   // Get service from service locator
   final NotificationService _notificationService = getIt<NotificationService>();
+  final SocketService _socketService = getIt<SocketService>();
 
   // Current loaded notifications for reference
   List<NotificationModel> _currentNotifications = [];
+
+  // Setup real-time socket event listeners
+  void _setupSocketListeners() {
+    // Listen for new notifications
+    _socketService.onNotificationCreated = (data) {
+      try {
+        final notification = NotificationModel.fromJson(data);
+        _addNotificationToList(notification);
+      } catch (e) {
+        // Handle parsing error
+      }
+    };
+
+    // Listen for notification updates (e.g., teacher responds)
+    _socketService.onNotificationUpdated = (data) {
+      try {
+        final notification = NotificationModel.fromJson(data);
+        _updateNotificationInList(notification);
+      } catch (e) {
+        // Handle parsing error
+      }
+    };
+
+    // Listen for notification deletions
+    _socketService.onNotificationDeleted = (notificationId) {
+      _removeNotificationFromList(notificationId);
+    };
+  }
+
+  // Add new notification to current list
+  void _addNotificationToList(NotificationModel notification) {
+    final currentState = state;
+    if (currentState is NotificationLoaded) {
+      final updatedList = [notification, ..._currentNotifications];
+      _currentNotifications = updatedList;
+      emit(
+        NotificationLoaded(
+          notifications: updatedList,
+          total: currentState.total + 1,
+          page: currentState.page,
+          totalPages: currentState.totalPages,
+        ),
+      );
+    }
+  }
+
+  // Update existing notification in list
+  void _updateNotificationInList(NotificationModel notification) {
+    final currentState = state;
+    if (currentState is NotificationLoaded) {
+      final updatedList = _currentNotifications.map((n) {
+        return n.id == notification.id ? notification : n;
+      }).toList();
+      _currentNotifications = updatedList;
+      emit(
+        NotificationLoaded(
+          notifications: updatedList,
+          total: currentState.total,
+          page: currentState.page,
+          totalPages: currentState.totalPages,
+        ),
+      );
+    }
+  }
+
+  // Remove notification from list
+  void _removeNotificationFromList(String notificationId) {
+    final currentState = state;
+    if (currentState is NotificationLoaded) {
+      final updatedList = _currentNotifications
+          .where((n) => n.id != notificationId)
+          .toList();
+      _currentNotifications = updatedList;
+      emit(
+        NotificationLoaded(
+          notifications: updatedList,
+          total: currentState.total - 1,
+          page: currentState.page,
+          totalPages: currentState.totalPages,
+        ),
+      );
+    }
+  }
 
   // Load all notifications for current user
   Future<void> loadNotifications({

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'config/service_locator.dart';
+import 'config/app_theme.dart';
 import 'cubits/notification_cubit.dart';
 import 'cubits/user_cubit.dart';
 import 'screens/login_screen.dart';
@@ -71,14 +72,11 @@ class StudentNotifier extends StatelessWidget {
               );
             },
 
-            // Material 3 with light theme and Google Fonts
-            theme: ThemeData(
-              useMaterial3: true,
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.blue,
-                brightness: Brightness.light,
+            // Material 3 with modern school theme and Google Fonts
+            theme: AppTheme.lightTheme.copyWith(
+              textTheme: GoogleFonts.interTextTheme(
+                AppTheme.lightTheme.textTheme,
               ),
-              textTheme: GoogleFonts.interTextTheme(),
             ),
 
             // Material 3 with dark theme and Google Fonts

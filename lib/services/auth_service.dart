@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../config/api_config.dart';
 import '../models/user_model.dart';
+import '../utils/app_logger.dart';
 import 'api_service.dart';
 
 /// Authentication Service
@@ -68,7 +69,7 @@ class AuthService {
         'message': response.data['message'] ?? 'Registration successful',
       };
     } catch (e) {
-      print('Register error: $e'); // Debug print
+      AppLogger.error('Register error', tag: 'AuthService', error: e);
       return {'success': false, 'message': ApiService.getErrorMessage(e)};
     }
   }
@@ -117,7 +118,7 @@ class AuthService {
         'message': response.data['message'] ?? 'Login successful',
       };
     } catch (e) {
-      print('Login error: $e'); // Debug print
+      AppLogger.error('Login error', tag: 'AuthService', error: e);
       return {'success': false, 'message': ApiService.getErrorMessage(e)};
     }
   }

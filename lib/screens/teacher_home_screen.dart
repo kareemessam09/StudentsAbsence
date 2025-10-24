@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animate_do/animate_do.dart';
@@ -19,8 +18,6 @@ class TeacherHomeScreen extends StatefulWidget {
 }
 
 class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
-  Timer? _refreshTimer;
-
   @override
   void initState() {
     super.initState();
@@ -28,19 +25,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     Future.microtask(() {
       context.read<NotificationCubit>().loadPendingNotifications();
     });
-
-    // Auto-refresh every 10 seconds to get new notifications
-    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      if (mounted) {
-        context.read<NotificationCubit>().loadPendingNotifications();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    super.dispose();
   }
 
   Future<void> _refreshNotifications() async {
@@ -114,10 +98,15 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           }
         },
         child: Scaffold(
+          backgroundColor: const Color(0xFFF5F7FA),
           appBar: AppBar(
-            title: const Text('Teacher Panel'),
+            title: const Text(
+              'Teacher Panel',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             centerTitle: true,
             elevation: 0,
+            backgroundColor: const Color(0xFF1565C0),
             automaticallyImplyLeading: false,
             actions: [
               BlocBuilder<NotificationCubit, NotificationState>(
@@ -132,13 +121,20 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                             vertical: 6.h,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
+                            color: const Color(0xFFFB8C00),
                             borderRadius: Responsive.borderRadius(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFB8C00).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Text(
                             '${state.pendingCount} pending',
                             style: TextStyle(
-                              color: theme.colorScheme.onPrimaryContainer,
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 12.sp,
                             ),
@@ -171,32 +167,31 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       child: Container(
                         padding: Responsive.padding(all: 20),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primaryContainer,
-                              theme.colorScheme.surfaceContainerHighest
-                                  .withOpacity(0.3),
-                            ],
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(24.r),
-                            bottomRight: Radius.circular(24.r),
-                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF1565C0).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: Row(
                           children: [
                             Container(
                               padding: EdgeInsets.all(12.r),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
+                                color: Colors.white,
                                 borderRadius: Responsive.borderRadius(12),
                               ),
                               child: Icon(
                                 Icons.pending_actions,
                                 size: 24.r,
-                                color: Colors.white,
+                                color: const Color(0xFF1565C0),
                               ),
                             ),
                             Responsive.horizontalSpace(12),
@@ -206,17 +201,19 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                                 children: [
                                   Text(
                                     'Welcome, $userName',
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14.sp,
-                                        ),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Attendance Requests',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
+                                    style: TextStyle(
                                       fontSize: 20.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ],
@@ -440,53 +437,80 @@ class _NotificationCard extends StatelessWidget {
                 return Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: isLoading ? null : onApprove,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 12.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: Responsive.borderRadius(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
+                          borderRadius: Responsive.borderRadius(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF43A047).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        icon: isLoading
-                            ? SizedBox(
-                                width: 16.r,
-                                height: 16.r,
-                                child: const CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Icon(Icons.check_circle, size: 20.r),
-                        label: Text(
-                          'Approve',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
+                        child: ElevatedButton.icon(
+                          onPressed: isLoading ? null : onApprove,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: Responsive.borderRadius(12),
+                            ),
+                          ),
+                          icon: isLoading
+                              ? SizedBox(
+                                  width: 16.r,
+                                  height: 16.r,
+                                  child: const CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Icon(Icons.check_circle, size: 20.r),
+                          label: Text(
+                            'Approve',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
                     ),
                     Responsive.horizontalSpace(12),
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: isLoading ? null : onReject,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.orange,
-                          side: const BorderSide(color: Colors.orange),
-                          padding: EdgeInsets.symmetric(vertical: 12.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: Responsive.borderRadius(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFFFB8C00),
+                            width: 2,
                           ),
+                          borderRadius: Responsive.borderRadius(12),
                         ),
-                        icon: Icon(Icons.cancel, size: 20.r),
-                        label: Text(
-                          'Reject',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
+                        child: OutlinedButton.icon(
+                          onPressed: isLoading ? null : onReject,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFFB8C00),
+                            side: BorderSide.none,
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: Responsive.borderRadius(12),
+                            ),
+                          ),
+                          icon: Icon(Icons.cancel, size: 20.r),
+                          label: Text(
+                            'Reject',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),

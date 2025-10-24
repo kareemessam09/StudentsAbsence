@@ -1,3 +1,4 @@
+import '../utils/app_logger.dart';
 import '../config/api_config.dart';
 import '../models/student_model.dart';
 import 'api_service.dart';
@@ -85,7 +86,11 @@ class StudentService {
 
       return {'success': true, 'students': students};
     } catch (e) {
-      print('Error in getStudentsByClass: $e');
+      AppLogger.error(
+        'Error in getStudentsByClass',
+        tag: 'StudentService',
+        error: e,
+      );
       return {
         'success': false,
         'message': ApiService.getErrorMessage(e),

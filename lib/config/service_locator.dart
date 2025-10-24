@@ -6,6 +6,7 @@ import '../services/class_service.dart';
 import '../services/notification_service.dart';
 import '../services/user_service.dart';
 import '../services/statistics_service.dart';
+import '../services/socket_service.dart';
 
 /// Global service locator instance
 final getIt = GetIt.instance;
@@ -40,4 +41,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<StatisticsService>(
     () => StatisticsService(getIt<ApiService>()),
   );
+
+  // Socket Service (Singleton) for real-time updates
+  getIt.registerLazySingleton<SocketService>(() => SocketService());
 }

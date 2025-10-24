@@ -59,11 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('School Attendance System'),
-          centerTitle: true,
-          automaticallyImplyLeading: false,
-        ),
+        backgroundColor: const Color(0xFFF5F7FA),
         body: BlocBuilder<UserCubit, UserState>(
           builder: (context, state) {
             final isLoading = state is UserLoading;
@@ -82,33 +78,48 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // App Logo/Title Animation
                       FadeInDown(
-                        duration: const Duration(milliseconds: 800),
+                        duration: const Duration(milliseconds: 500),
                         child: Column(
                           children: [
-                            ClipRRect(
-                              borderRadius: Responsive.borderRadius(16),
-                              child: Image.asset(
-                                'logo.png',
-                                width: 120.r,
-                                height: 120.r,
-                                fit: BoxFit.contain,
+                            Container(
+                              width: 120.r,
+                              height: 120.r,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF1565C0,
+                                    ).withOpacity(0.2),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'logo.png',
+                                  width: 120.r,
+                                  height: 120.r,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
-                            Responsive.verticalSpace(16),
+                            Responsive.verticalSpace(24),
                             Text(
                               'StudentNotifier',
                               style: theme.textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 28.sp,
+                                fontSize: 32.sp,
+                                color: const Color(0xFF1565C0),
                               ),
                             ),
                             Responsive.verticalSpace(8),
                             Text(
-                              'Login to continue',
+                              'Welcome back! Login to continue',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(
-                                  0.6,
-                                ),
+                                color: const Color(0xFF64748B),
                                 fontSize: 14.sp,
                               ),
                             ),
@@ -185,15 +196,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       Responsive.verticalSpace(32),
 
-                      // Login Button
+                      // Login Button with Gradient
                       FadeInUp(
                         duration: const Duration(milliseconds: 600),
                         delay: const Duration(milliseconds: 400),
-                        child: SizedBox(
+                        child: Container(
                           height: Responsive.buttonHeight(context),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: Responsive.borderRadius(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF1565C0).withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
                           child: ElevatedButton(
                             onPressed: isLoading ? null : _handleLogin,
                             style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
                               shape: RoundedRectangleBorder(
                                 borderRadius: Responsive.borderRadius(12),
                               ),
@@ -212,6 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     style: TextStyle(
                                       fontSize: 16.sp,
                                       fontWeight: FontWeight.bold,
+                                      color: Colors.white,
                                     ),
                                   ),
                           ),

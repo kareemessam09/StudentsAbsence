@@ -5,7 +5,6 @@ import 'package:animate_do/animate_do.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../cubits/user_cubit.dart';
 import '../models/class_model.dart';
-import '../services/class_service.dart';
 import '../services/statistics_service.dart';
 import '../config/service_locator.dart';
 
@@ -17,12 +16,13 @@ class ManagerHomeScreen extends StatefulWidget {
 }
 
 class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
-  final ClassService _classService = getIt<ClassService>();
   final StatisticsService _statisticsService = getIt<StatisticsService>();
 
   List<ClassModel> _classes = [];
+  Map<String, List<ClassModel>> _groupedClasses = {};
+  List<String> _grades = [];
   Map<String, dynamic>? _overviewStats;
-  Map<String, dynamic>? _recentActivity;
+  List<dynamic> _attendanceData = [];
   bool _isLoadingStats = false;
   String? _errorMessage;
   Timer? _refreshTimer;
@@ -55,26 +55,62 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
     });
 
     try {
-      // Fetch overview statistics from backend (single API call)
-      final statsResult = await _statisticsService.getManagerOverview();
+      // Fetch daily attendance statistics from backend
+      final statsResult = await _statisticsService.getDailyAttendance();
 
       if (statsResult['success']) {
-        // Also fetch classes for the list view
-        final classesResult = await _classService.getAllClasses();
+        final data = statsResult['data'];
 
         if (mounted) {
+          // Extract classes from attendance data
+          final classesData = data['classes'] as List;
+
+          // Group classes by grade
+          final Map<String, List<ClassModel>> grouped = {};
+          final List<ClassModel> classes = [];
+
+          for (var classData in classesData) {
+            // Create ClassModel from attendance data
+            final classModel = ClassModel(
+              id: classData['classId'] as String,
+              name: classData['className'] as String,
+              description: '',
+              teacherId: classData['teacher']?['id'] ?? '',
+              teacherName: classData['teacher']?['name'],
+              studentIds: [],
+              capacity: (classData['total'] ?? 0) as int,
+              isActive: true,
+              startDate: DateTime.now(),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+
+            classes.add(classModel);
+
+            // Group by grade
+            final parts = classModel.name.split('-');
+            final grade = parts.isNotEmpty ? parts[0].trim() : 'Other';
+
+            if (!grouped.containsKey(grade)) {
+              grouped[grade] = [];
+            }
+            grouped[grade]!.add(classModel);
+          }
+
+          // Sort grades: KG first, then G grades
+          final grades = grouped.keys.toList();
+          grades.sort((a, b) {
+            if (a.startsWith('KG') && !b.startsWith('KG')) return -1;
+            if (!a.startsWith('KG') && b.startsWith('KG')) return 1;
+            return a.compareTo(b);
+          });
+
           setState(() {
-            _overviewStats = statsResult['overview'];
-            _recentActivity = statsResult['recentActivity'];
-            _classes = classesResult['success']
-                ? (classesResult['classes'] as List)
-                      .map(
-                        (json) => json is ClassModel
-                            ? json
-                            : ClassModel.fromJson(json),
-                      )
-                      .toList()
-                : [];
+            _overviewStats = data['overall'];
+            _attendanceData = classesData;
+            _classes = classes;
+            _groupedClasses = grouped;
+            _grades = grades;
             _isLoadingStats = false;
           });
         }
@@ -105,10 +141,15 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
+        backgroundColor: const Color(0xFFF5F7FA),
         appBar: AppBar(
-          title: const Text('Manager Dashboard'),
+          title: const Text(
+            'Manager Dashboard',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           centerTitle: true,
           elevation: 0,
+          backgroundColor: const Color(0xFF1565C0),
           automaticallyImplyLeading: false,
           actions: [
             IconButton(
@@ -156,27 +197,31 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.colorScheme.primaryContainer,
-                                theme.colorScheme.secondaryContainer,
-                              ],
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF1565C0).withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                   FontAwesomeIcons.chartLine,
-                                  color: theme.colorScheme.onPrimary,
+                                  color: Color(0xFF1565C0),
                                   size: 32,
                                 ),
                               ),
@@ -187,19 +232,19 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                                   children: [
                                     Text(
                                       'Welcome, ${user?.name ?? "Manager"}',
-                                      style: theme.textTheme.titleLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
+                                    const Text(
                                       'School Overview',
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withOpacity(0.7),
-                                          ),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white70,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -241,7 +286,7 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Class Cards
+                      // Class Cards Grouped by Grade
                       if (_classes.isEmpty)
                         const Center(
                           child: Padding(
@@ -250,14 +295,90 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                           ),
                         )
                       else
-                        ..._classes.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final classModel = entry.value;
-
+                        ..._grades.map((grade) {
+                          final gradeClasses = _groupedClasses[grade]!;
                           return FadeInUp(
                             duration: const Duration(milliseconds: 600),
-                            delay: Duration(milliseconds: 500 + (index * 100)),
-                            child: _buildClassCard(theme, classModel),
+                            delay: const Duration(milliseconds: 500),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Grade Header
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        theme.colorScheme.primaryContainer,
+                                        theme.colorScheme.secondaryContainer,
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        FontAwesomeIcons.school,
+                                        color: theme.colorScheme.primary,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        grade,
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: theme.colorScheme.primary,
+                                            ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${gradeClasses.length} ${gradeClasses.length == 1 ? 'class' : 'classes'}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: theme.colorScheme.onPrimary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Classes in this grade
+                                ...gradeClasses.map((classModel) {
+                                  // Find attendance data for this class
+                                  final attendanceInfo = _attendanceData
+                                      .firstWhere(
+                                        (data) =>
+                                            data['classId'] == classModel.id,
+                                        orElse: () => null,
+                                      );
+                                  return _buildClassCard(
+                                    theme,
+                                    classModel,
+                                    attendanceInfo,
+                                  );
+                                }).toList(),
+                                const SizedBox(height: 16),
+                              ],
+                            ),
                           );
                         }).toList(),
                     ],
@@ -269,15 +390,13 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
   }
 
   Widget _buildOverallStats(ThemeData theme) {
-    // Get data from backend statistics
+    // Get data from daily attendance statistics
     final int totalClasses = _overviewStats?['totalClasses'] ?? 0;
-    final int totalStudents = _overviewStats?['totalStudents'] ?? 0;
-    final int totalPresent =
-        _overviewStats?['attendanceToday']?['present'] ?? 0;
-    final int totalAbsent = _overviewStats?['attendanceToday']?['absent'] ?? 0;
-    final double attendanceRate =
-        (_overviewStats?['attendanceToday']?['rate'] ?? 0.0).toDouble();
-    final int totalCapacity = _overviewStats?['totalCapacity'] ?? 0;
+    final int totalStudents = _overviewStats?['total'] ?? 0;
+    final int totalPresent = _overviewStats?['present'] ?? 0;
+    final int totalGone = _overviewStats?['gone'] ?? 0;
+    final double attendanceRate = (_overviewStats?['percentage'] ?? 0)
+        .toDouble();
 
     return Column(
       children: [
@@ -324,8 +443,8 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
               Expanded(
                 child: _StatCard(
                   icon: FontAwesomeIcons.userXmark,
-                  label: 'Absent Today',
-                  value: totalAbsent.toString(),
+                  label: 'Gone Today',
+                  value: totalGone.toString(),
                   color: Colors.red,
                 ),
               ),
@@ -353,12 +472,10 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _StatCard(
-                  icon: FontAwesomeIcons.chartPie,
-                  label: 'Capacity Used',
-                  value: totalCapacity > 0
-                      ? '${((totalStudents / totalCapacity) * 100).toStringAsFixed(0)}%'
-                      : '0%',
-                  color: Colors.teal,
+                  icon: FontAwesomeIcons.chartLine,
+                  label: 'Total Gone',
+                  value: totalGone.toString(),
+                  color: Colors.orange,
                 ),
               ),
             ],
@@ -368,16 +485,23 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
     );
   }
 
-  Widget _buildClassCard(ThemeData theme, ClassModel classModel) {
-    final double utilizationRate = classModel.capacity > 0
-        ? (classModel.studentCount / classModel.capacity) * 100
-        : 0.0;
+  Widget _buildClassCard(
+    ThemeData theme,
+    ClassModel classModel,
+    Map<String, dynamic>? attendanceInfo,
+  ) {
+    // Get attendance data with new field names
+    final int totalStudents = attendanceInfo?['total'] ?? classModel.capacity;
+    final int presentCount = attendanceInfo?['present'] ?? 0;
+    final int goneCount = attendanceInfo?['gone'] ?? 0;
+    final double attendanceRate = (attendanceInfo?['percentage'] ?? 0)
+        .toDouble();
 
-    final Color statusColor = utilizationRate >= 90
-        ? Colors.red
-        : utilizationRate >= 75
+    final Color statusColor = attendanceRate >= 80
+        ? Colors.green
+        : attendanceRate >= 60
         ? Colors.orange
-        : Colors.green;
+        : Colors.red;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -420,7 +544,10 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Teacher ID: ${classModel.teacherId}',
+                          classModel.teacherName ??
+                              (classModel.teacherId.isEmpty
+                                  ? 'No teacher assigned'
+                                  : 'Teacher ID: ${classModel.teacherId}'),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface.withOpacity(0.6),
                           ),
@@ -438,7 +565,7 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '${utilizationRate.toStringAsFixed(0)}%',
+                      '${attendanceRate.toStringAsFixed(0)}%',
                       style: TextStyle(
                         color: statusColor,
                         fontWeight: FontWeight.bold,
@@ -454,33 +581,33 @@ class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
                   Expanded(
                     child: _buildStatItem(
                       icon: FontAwesomeIcons.users,
-                      label: 'Enrolled',
-                      value: classModel.studentCount.toString(),
+                      label: 'Total',
+                      value: totalStudents.toString(),
                       color: Colors.blue,
                     ),
                   ),
                   Expanded(
                     child: _buildStatItem(
-                      icon: FontAwesomeIcons.userGroup,
-                      label: 'Capacity',
-                      value: classModel.capacity.toString(),
-                      color: Colors.purple,
+                      icon: FontAwesomeIcons.circleCheck,
+                      label: 'Present',
+                      value: presentCount.toString(),
+                      color: Colors.green,
                     ),
                   ),
                   Expanded(
                     child: _buildStatItem(
-                      icon: FontAwesomeIcons.chartPie,
-                      label: 'Filled',
-                      value: '${utilizationRate.toStringAsFixed(0)}%',
+                      icon: FontAwesomeIcons.userXmark,
+                      label: 'Gone',
+                      value: goneCount.toString(),
+                      color: Colors.red,
+                    ),
+                  ),
+                  Expanded(
+                    child: _buildStatItem(
+                      icon: FontAwesomeIcons.percent,
+                      label: 'Rate',
+                      value: '${attendanceRate.toStringAsFixed(0)}%',
                       color: statusColor,
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildStatItem(
-                      icon: FontAwesomeIcons.doorOpen,
-                      label: 'Available',
-                      value: classModel.availableSpots.toString(),
-                      color: Colors.orange,
                     ),
                   ),
                 ],
@@ -532,22 +659,34 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: theme.textTheme.headlineSmall?.copyWith(
+            style: TextStyle(
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -555,9 +694,7 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
-            ),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
             textAlign: TextAlign.center,
           ),
         ],

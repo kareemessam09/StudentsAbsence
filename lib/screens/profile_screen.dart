@@ -9,6 +9,7 @@ import '../models/class_model.dart';
 import '../services/class_service.dart';
 import '../config/service_locator.dart';
 import '../utils/responsive.dart';
+import '../utils/app_logger.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -52,21 +53,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _fetchAvailableClasses() async {
-    print('🔵 Starting to fetch classes...');
+    AppLogger.info('Starting to fetch classes...', tag: 'ProfileScreen');
     setState(() {
       _isLoadingClasses = true;
     });
 
     try {
-      print('🔵 Calling ClassService.getAllClasses()...');
-      final result = await _classService.getAllClasses();
-      print(
-        '🔵 Got result: ${result['success']} - ${result['message'] ?? 'No message'}',
+      AppLogger.network(
+        'Calling ClassService.getAllClasses()',
+        tag: 'ProfileScreen',
+      );
+      final result = await _classService.getAllClasses(
+        limit: 1000, // Fetch all classes without pagination
+      );
+      AppLogger.info(
+        'Got result: ${result['success']} - ${result['message'] ?? 'No message'}',
+        tag: 'ProfileScreen',
       );
 
       if (result['success']) {
         final classes = result['classes'] as List<ClassModel>;
-        print('🟢 Successfully fetched ${classes.length} classes');
+        AppLogger.success(
+          'Successfully fetched ${classes.length} classes',
+          tag: 'ProfileScreen',
+        );
         final user = context.read<UserCubit>().currentUser;
 
         // Group classes by grade
@@ -99,15 +109,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 .where((c) => c.teacherId == user.id)
                 .map((c) => c.id)
                 .toSet();
-            print(
-              '🟢 Pre-selected ${_selectedClassIds.length} classes for teacher ${user.id}',
+            AppLogger.info(
+              'Pre-selected ${_selectedClassIds.length} classes for teacher ${user.id}',
+              tag: 'ProfileScreen',
             );
           }
           _isLoadingClasses = false;
         });
       } else {
         // Handle unsuccessful response
-        print('🔴 Failed to fetch classes: ${result['message']}');
+        AppLogger.error(
+          'Failed to fetch classes: ${result['message']}',
+          tag: 'ProfileScreen',
+        );
         setState(() {
           _isLoadingClasses = false;
         });
@@ -124,7 +138,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     } catch (e) {
-      print('🔴 Exception fetching classes: $e');
+      AppLogger.error(
+        'Exception fetching classes',
+        tag: 'ProfileScreen',
+        error: e,
+      );
       setState(() {
         _isLoadingClasses = false;
       });
@@ -296,9 +314,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       },
       child: Scaffold(
+        backgroundColor: const Color(0xFFF5F7FA),
         appBar: AppBar(
-          title: const Text('Profile Settings'),
+          title: const Text(
+            'Profile Settings',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           centerTitle: true,
+          backgroundColor: const Color(0xFF1565C0),
+          elevation: 0,
         ),
         body: BlocBuilder<UserCubit, UserState>(
           builder: (context, state) {
@@ -318,30 +342,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Profile Avatar
+                      // Profile Avatar with User Initial
                       FadeInDown(
                         duration: const Duration(milliseconds: 600),
                         child: Center(
                           child: Column(
                             children: [
                               Container(
-                                width: 100.r,
-                                height: 100.r,
+                                width: 120.r,
+                                height: 120.r,
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primaryContainer,
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF1565C0),
+                                      Color(0xFF42A5F5),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
                                   shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF1565C0,
+                                      ).withOpacity(0.3),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
                                 ),
-                                child: Icon(
-                                  currentUser.isReceptionist
-                                      ? Icons.person
-                                      : Icons.school,
-                                  size: 50.r,
-                                  color: theme.colorScheme.onPrimaryContainer,
+                                child: Center(
+                                  child: Text(
+                                    currentUser.name.isNotEmpty
+                                        ? currentUser.name[0].toUpperCase()
+                                        : '?',
+                                    style: TextStyle(
+                                      fontSize: 48.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              Responsive.verticalSpace(16),
-                              Chip(
-                                label: Text(
+                              Responsive.verticalSpace(12),
+                              Text(
+                                currentUser.name,
+                                style: TextStyle(
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF1E293B),
+                                ),
+                              ),
+                              Responsive.verticalSpace(8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF1565C0),
+                                      Color(0xFF42A5F5),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
                                   currentUser.isReceptionist
                                       ? 'Receptionist'
                                       : currentUser.isTeacher
@@ -349,11 +416,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       : 'Manager',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 13.sp,
+                                    fontSize: 14.sp,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                backgroundColor:
-                                    theme.colorScheme.secondaryContainer,
                               ),
                             ],
                           ),
@@ -725,16 +791,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       Responsive.verticalSpace(32),
 
-                      // Save Button
+                      // Save Button with Gradient
                       FadeInUp(
                         duration: const Duration(milliseconds: 600),
                         delay: const Duration(milliseconds: 500),
-                        child: SizedBox(
+                        child: Container(
                           height: Responsive.buttonHeight(context),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: Responsive.borderRadius(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF1565C0).withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
                           child: ElevatedButton.icon(
                             onPressed: isLoading
                                 ? null
                                 : () => _saveProfile(currentUser),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: Responsive.borderRadius(12),
+                              ),
+                            ),
                             icon: isLoading
                                 ? SizedBox(
                                     width: 20.r,
@@ -744,17 +832,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : Icon(Icons.save, size: 20.r),
+                                : Icon(
+                                    Icons.save,
+                                    size: 20.r,
+                                    color: Colors.white,
+                                  ),
                             label: Text(
                               isLoading ? 'Saving...' : 'Save Changes',
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: Responsive.borderRadius(12),
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -766,8 +854,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       FadeInUp(
                         duration: const Duration(milliseconds: 600),
                         delay: const Duration(milliseconds: 600),
-                        child: SizedBox(
+                        child: Container(
                           height: Responsive.buttonHeight(context),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: const Color(0xFFE53935),
+                              width: 2,
+                            ),
+                            borderRadius: Responsive.borderRadius(12),
+                          ),
                           child: OutlinedButton.icon(
                             onPressed: isLoading
                                 ? null
@@ -812,17 +907,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                     );
                                   },
-                            icon: Icon(Icons.logout, size: 20.r),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide.none,
+                              foregroundColor: const Color(0xFFE53935),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: Responsive.borderRadius(12),
+                              ),
+                            ),
+                            icon: Icon(
+                              Icons.logout,
+                              size: 20.r,
+                              color: const Color(0xFFE53935),
+                            ),
                             label: Text(
                               'Logout',
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: Responsive.borderRadius(12),
+                                color: const Color(0xFFE53935),
                               ),
                             ),
                           ),

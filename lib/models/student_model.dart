@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 class StudentModel extends Equatable {
   final String id;
   final String studentCode; // Unique identifier (uppercase)
-  final String nama; // Student name (Indonesian: "nama" = "name")
+  final String name; // Student name (Indonesian: "nama" = "name")
   final String? nameArabic; // Arabic name
   final String? nameEnglish; // English name
   final String classId; // Reference to Class
@@ -15,7 +15,7 @@ class StudentModel extends Equatable {
   const StudentModel({
     required this.id,
     required this.studentCode,
-    required this.nama,
+    required this.name,
     this.nameArabic,
     this.nameEnglish,
     required this.classId,
@@ -41,7 +41,7 @@ class StudentModel extends Equatable {
     return StudentModel(
       id: id ?? this.id,
       studentCode: studentCode ?? this.studentCode,
-      nama: nama ?? this.nama,
+      name: nama ?? this.name,
       nameArabic: nameArabic ?? this.nameArabic,
       nameEnglish: nameEnglish ?? this.nameEnglish,
       classId: classId ?? this.classId,
@@ -57,7 +57,7 @@ class StudentModel extends Equatable {
     return {
       'id': id,
       'studentCode': studentCode,
-      'nama': nama,
+      'nama': name,
       'nameArabic': nameArabic,
       'nameEnglish': nameEnglish,
       'class': classId,
@@ -73,7 +73,7 @@ class StudentModel extends Equatable {
     return StudentModel(
       id: map['_id'] as String? ?? map['id'] as String,
       studentCode: map['studentCode'] as String,
-      nama: map['nama'] as String,
+      name: map['nama'] as String,
       nameArabic: map['nameArabic'] as String?,
       nameEnglish: map['nameEnglish'] as String?,
       classId: map['class'] is String
@@ -94,13 +94,13 @@ class StudentModel extends Equatable {
   Map<String, dynamic> toJson() => toMap();
 
   // Helper getter for full student info
-  String get fullInfo => '$nama ($studentCode)';
+  String get fullInfo => '$name ($studentCode)';
 
   @override
   List<Object?> get props => [
     id,
     studentCode,
-    nama,
+    name,
     nameArabic,
     nameEnglish,
     classId,
@@ -112,6 +112,6 @@ class StudentModel extends Equatable {
 
   @override
   String toString() {
-    return 'StudentModel(id: $id, studentCode: $studentCode, nama: $nama, classId: $classId, isActive: $isActive)';
+    return 'StudentModel(id: $id, studentCode: $studentCode, nama: $name, classId: $classId, isActive: $isActive)';
   }
 }

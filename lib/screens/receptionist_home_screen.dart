@@ -169,7 +169,7 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
         recipientId: teacherId,
         studentId: _selectedStudentId!,
         message:
-            '${selectedStudent.nameArabic ?? selectedStudent.nama} - ${selectedClass.name}',
+            '${selectedStudent.nameArabic ?? selectedStudent.name} - ${selectedClass.name}',
       );
 
       if (mounted) {
@@ -217,10 +217,15 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
+        backgroundColor: const Color(0xFFF5F7FA),
         appBar: AppBar(
-          title: const Text('Receptionist Panel'),
+          title: const Text(
+            'Receptionist Panel',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           centerTitle: true,
           elevation: 0,
+          backgroundColor: const Color(0xFF1565C0),
           automaticallyImplyLeading: false,
           actions: [
             IconButton(
@@ -260,6 +265,7 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
                           flex: 2,
                           child: DropdownButtonFormField<String>(
                             value: _selectedGrade,
+                            isExpanded: true,
                             style: TextStyle(
                               fontSize: 14.sp,
                               color: theme.colorScheme.onSurface,
@@ -272,7 +278,7 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
                                 borderRadius: Responsive.borderRadius(12),
                               ),
                               filled: true,
-                              fillColor: theme.colorScheme.surface,
+                              fillColor: Colors.white,
                             ),
                             items: _grades.map((String grade) {
                               return DropdownMenuItem<String>(
@@ -283,6 +289,7 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
                                     fontSize: 14.sp,
                                     fontWeight: FontWeight.bold,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               );
                             }).toList(),
@@ -309,6 +316,7 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
                           flex: 3,
                           child: DropdownButtonFormField<String>(
                             value: _selectedClassId,
+                            isExpanded: true,
                             style: TextStyle(
                               fontSize: 14.sp,
                               color: theme.colorScheme.onSurface,
@@ -324,7 +332,7 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
                                 borderRadius: Responsive.borderRadius(12),
                               ),
                               filled: true,
-                              fillColor: theme.colorScheme.surface,
+                              fillColor: Colors.white,
                             ),
                             items: _selectedGrade != null
                                 ? _groupedClasses[_selectedGrade]!.map((
@@ -335,6 +343,7 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
                                       child: Text(
                                         classModel.name,
                                         style: TextStyle(fontSize: 14.sp),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     );
                                   }).toList()
@@ -383,6 +392,7 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
                   else
                     DropdownButtonFormField<String>(
                       value: _selectedStudentId,
+                      isExpanded: true,
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: theme.colorScheme.onSurface,
@@ -395,13 +405,13 @@ class _ReceptionistHomeScreenState extends State<ReceptionistHomeScreen> {
                           borderRadius: Responsive.borderRadius(12),
                         ),
                         filled: true,
-                        fillColor: theme.colorScheme.surface,
+                        fillColor: Colors.white,
                       ),
                       items: _students.map((StudentModel student) {
                         return DropdownMenuItem<String>(
                           value: student.id,
                           child: Text(
-                            student.nameArabic ?? student.nama,
+                            student.nameArabic ?? student.name,
                             style: TextStyle(fontSize: 14.sp),
                             overflow: TextOverflow.ellipsis,
                           ),

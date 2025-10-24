@@ -2,7 +2,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
+import '../services/socket_service.dart';
+import '../services/api_service.dart';
 import '../config/service_locator.dart';
+import '../utils/app_logger.dart';
 import 'user_state.dart';
 
 class UserCubit extends Cubit<UserState> {
@@ -11,6 +14,8 @@ class UserCubit extends Cubit<UserState> {
   // Get services from service locator
   final AuthService _authService = getIt<AuthService>();
   final UserService _userService = getIt<UserService>();
+  final SocketService _socketService = getIt<SocketService>();
+  final ApiService _apiService = getIt<ApiService>();
 
   // Get current user if authenticated
   UserModel? get currentUser {
@@ -27,6 +32,12 @@ class UserCubit extends Cubit<UserState> {
     if (isLoggedIn) {
       final user = await _authService.getSavedUser();
       if (user != null) {
+        // Connect socket on app start if user is logged in
+        final token = await _apiService.getToken();
+        if (token != null) {
+          _socketService.connect(token);
+        }
+
         emit(UserAuthenticated(user));
       }
     }
@@ -39,18 +50,25 @@ class UserCubit extends Cubit<UserState> {
     try {
       final result = await _authService.login(email: email, password: password);
 
-      print('Login result: $result'); // Debug print
+      AppLogger.info('Login result: $result', tag: 'UserCubit');
 
       if (result['success']) {
         final user = result['user'] as UserModel;
+
+        // Connect socket with user's token
+        final token = await _apiService.getToken();
+        if (token != null) {
+          _socketService.connect(token);
+        }
+
         emit(UserAuthenticated(user));
       } else {
         final errorMessage = result['message'] ?? 'Login failed';
-        print('Login failed: $errorMessage'); // Debug print
+        AppLogger.error('Login failed: $errorMessage', tag: 'UserCubit');
         emit(UserError(errorMessage));
       }
     } catch (e) {
-      print('Login exception: $e'); // Debug print
+      AppLogger.error('Login exception', tag: 'UserCubit', error: e);
       emit(UserError('An unexpected error occurred: ${e.toString()}'));
     }
   }
@@ -78,14 +96,21 @@ class UserCubit extends Cubit<UserState> {
 
       if (result['success']) {
         final user = result['user'] as UserModel;
+
+        // Connect socket with user's token
+        final token = await _apiService.getToken();
+        if (token != null) {
+          _socketService.connect(token);
+        }
+
         emit(UserAuthenticated(user));
       } else {
         final errorMessage = result['message'] ?? 'Registration failed';
-        print('Signup failed: $errorMessage'); // Debug print
+        AppLogger.error('Signup failed: $errorMessage', tag: 'UserCubit');
         emit(UserError(errorMessage));
       }
     } catch (e) {
-      print('Signup exception: $e'); // Debug print
+      AppLogger.error('Signup exception', tag: 'UserCubit', error: e);
       emit(UserError('An unexpected error occurred: ${e.toString()}'));
     }
   }
@@ -96,9 +121,12 @@ class UserCubit extends Cubit<UserState> {
 
     try {
       await _authService.logout();
+      // Disconnect socket on logout
+      _socketService.disconnect();
       emit(UserUnauthenticated());
     } catch (e) {
       // Still logout locally even if API call fails
+      _socketService.disconnect();
       emit(UserUnauthenticated());
     }
   }

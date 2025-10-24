@@ -30,4 +30,27 @@ class StatisticsService {
       return {'success': false, 'message': ApiService.getErrorMessage(e)};
     }
   }
+
+  /// Get daily attendance statistics
+  /// GET /statistics/daily-attendance?date=YYYY-MM-DD
+  Future<Map<String, dynamic>> getDailyAttendance({String? date}) async {
+    try {
+      final queryParams = date != null ? '?date=$date' : '';
+      final response = await _apiService.get(
+        '${ApiEndpoints.dailyAttendance}$queryParams',
+      );
+
+      if (response.data['status'] == 'success') {
+        return {'success': true, 'data': response.data['data']};
+      } else {
+        return {
+          'success': false,
+          'message':
+              response.data['message'] ?? 'Failed to fetch daily attendance',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': ApiService.getErrorMessage(e)};
+    }
+  }
 }

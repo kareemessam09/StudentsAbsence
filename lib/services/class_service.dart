@@ -1,5 +1,6 @@
 import '../config/api_config.dart';
 import '../models/class_model.dart';
+import '../utils/app_logger.dart';
 import 'api_service.dart';
 
 /// Class Service
@@ -190,7 +191,7 @@ class ClassService {
         };
       }
     } catch (e) {
-      print('Error in assignTeacher: $e');
+      AppLogger.error('Error in assignTeacher', tag: 'ClassService', error: e);
       return {'success': false, 'message': ApiService.getErrorMessage(e)};
     }
   }
